@@ -3,7 +3,7 @@
 
 # Magic Leap Setup Tool
 A tool to configure your Unity project to build for Magic Leap. It automates the process outlined here: [Magic Leap Getting Started Guide](https://developer.magicleap.com/en-us/learn/guides/get-started-developing-in-unity).
-
+> *This is not an official Magic Leap tool*
 
 ## Prerequisites
 
