@@ -161,6 +161,8 @@ namespace MagicLeapSetupTool.Editor
             var autoShow = EditorPrefs.GetBool(AutoShowEditorPrefKey, true);
             if (subscribedToUpdate && !autoShow)
             {
+              EditorApplication.update -= OnEditorApplicationUpdate;
+              subscribedToUpdate = false;
               return;
             }
 
