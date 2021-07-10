@@ -17,6 +17,13 @@ namespace MagicLeapSetupTool.Editor
     [InitializeOnLoad]
     public class MagicLeapSetupWindow : EditorWindow
     {
+    #region EDITOR PREFS
+
+        private const string PREVIOUS_CERTIFICATE_PROMPT_KEY = "PREVIOUS_CERTIFICATE_PROMPT_KEY";
+        private const string MAGIC_LEAP_SETUP_POSTFIX_KEY = "MAGIC_LEAP_SETUP_KEY";
+
+    #endregion
+
     #region TEXT AND LABELS
 
         private const string WINDOW_PATH = "Magic Leap/Project Setup Utility";
@@ -24,8 +31,9 @@ namespace MagicLeapSetupTool.Editor
         private const string TITLE_LABEL = "MAGIC LEAP";
         private const string SUBTITLE_LABEL = "PROJECT SETUP";
         private const string HELP_BOX_TEXT = "Required settings For Lumin SDK";
-        private const string LOADING_TEXT = "  ...Loading and Importing...";
+        private const string LOADING_TEXT = "   Loading and Importing...";
         private const string CONDITION_MET_LABEL = "Done";
+        private const string CONDITION_MET_CHANGE_LABEL = "Change";
         private const string FIX_SETTING_BUTTON_LABEL = "Fix Setting";
 
         private const string COLOR_SPACE_LABEL = "Set Color Space To Linear";
@@ -38,21 +46,32 @@ namespace MagicLeapSetupTool.Editor
         private const string ENABLE_PLUGIN_LABEL = "Enable Plugin";
         private const string ENABLE_PLUGIN_FAILED_PLUGIN_NOT_INSTALLED_MESSAGE = "Magic Leap Pug-in is not installed.";
 
+        private const string LOCATE_SDK_FOLDER_LABEL = "Set external Lumin SDK Folder";
+        private const string LOCATE_SDK_FOLDER_BUTTON_LABEL = "Locate SDK";
+
+
         private const string UPDATE_MANIFEST_LABEL = "Update the manifest file";
         private const string UPDATE_MANIFEST_BUTTON_LABEL = "Update";
         private const string LINKS_TITLE = "Helpful Links:";
-        private const string SET_CERTIFICATE_PATH_LABEL = "Locate developer certificate";
+        private readonly string SET_CERTIFICATE_PATH_LABEL = "Locate developer certificate";
         private const string SET_CERTIFICATE_PATH_BUTTON_LABEL = "Locate";
+        
         private const string SET_CERTIFICATE_HELP_TEXT = "Get a developer certificate";
 
-        private const string IMPORT_LUMIN_SDK_UNITYPACKAGE = "Import the Magic Leap unitypackage";
+        private const string IMPORT_LUMIN_SDK_UNITYPACKAGE = "Import the SDK Unity Package";
         private const string IMPORT_LUMIN_SDK_UNITYPACKAGE_BUTTON = "Import package";
-        private const string FAILED_TO_IMPORT_TITLE = "Failed to import unitypackage.";
-        private const string FAILED_TO_IMPORT_MESSAGE = "Failed to find the Lumin SDK unitypackage. Please make sure your development enviornment is setup correctly.";
-        private const string FAILED_TO_IMPORT_OK = "Try again";
+        private const string FAILED_TO_IMPORT_TITLE = "Failed to import Unity Package.";
+        private const string FAILED_TO_IMPORT_MESSAGE = "Failed to find the Lumin SDK Unity Package. Please make sure your development enviornment is setup correctly.";
+        private const string FAILED_TO_IMPORT_OK = "Try Again";
         private const string FAILED_TO_IMPORT_CANCEL = "Cancel";
-        private const string FAILED_TO_IMPORT_ALT = "Setup developer environment page";
+        private const string FAILED_TO_IMPORT_ALT = "Setup Developer Environment";
         private const string FAILED_TO_IMPORT_HELP_TEXT = "Setup the developer environment";
+
+        private const string FOUND_PREVIOUS_CERTIFICATE_TITLE = "Found Previously Used Developer Certificate";
+        private const string FOUND_PREVIOUS_CERTIFICATE_MESSAGE = "Magic Leap Setup has found a previously used developer certificate. Would you like to use it in this project?";
+        private const string FOUND_PREVIOUS_CERTIFICATE_OK = "Yes";
+        private const string FOUND_PREVIOUS_CERTIFICATE_CANCEL = "Cancel";
+        private const string FOUND_PREVIOUS_CERTIFICATE_ALT = "Browse For Certificate";
 
         private const string SET_CORRECT_GRAPHICS_API_LABEL = "Add OpenGLCore to Graphics API";
         private const string SET_CORRECT_GRAPHICS_BUTTON_LABEL = "Update";
@@ -62,23 +81,23 @@ namespace MagicLeapSetupTool.Editor
         private const string APPLY_ALL_PROMPT_MESSAGE = "This will update the project to the recommended settings for Magic leap EXCEPT FOR SETTING A DEVELOPMENT CERTIFICATE. Would you like to continue?";
         private const string APPLY_ALL_PROMPT_OK = "Continue";
         private const string APPLY_ALL_PROMPT_CANCEL = "Cancel";
-        private const string APPLY_ALL_PROMPT_ALT = "Setup development certificate";
+        private const string APPLY_ALL_PROMPT_ALT = "Setup Development Certificate";
 
 
         private const string APPLY_ALL_PROMPT_NOTHING_TO_DO_MESSAGE = "All settings are configured. There is no need to run utility";
         private const string APPLY_ALL_PROMPT_NOTHING_TO_DO_OK = "Close";
 
         private const string APPLY_ALL_PROMPT_MISSING_CERT_MESSAGE = "All settings are configured except the developer certificate. Would you like to set it now?";
-        private const string APPLY_ALL_PROMPT_MISSING_CERT_OK = "Set certificate";
+        private const string APPLY_ALL_PROMPT_MISSING_CERT_OK = "Set Certificate";
         private const string APPLY_ALL_PROMPT_MISSING_CERT_CANCEL = "Cancel";
 
         private const string CHANGE_EDITOR_GRAPHICS_API_TITLE = "Changing editor graphics API";
         private const string CHANGE_EDITOR_GRAPHICS_API_MESSAGE = "You've changed the active graphics API. This requires a restart of the Editor. Do you want to save the Scene when restarting?";
         private const string CHANGE_EDITOR_GRAPHICS_API_SAVE_MESSAGE = "You've changed the active graphics API. This requires a restart of the Editor.";
         private const string CHANGE_EDITOR_GRAPHICS_API_OK = "Restart";
-        private const string CHANGE_EDITOR_GRAPHICS_API_OK_SAVE = "Save and restart";
-        private const string CHANGE_EDITOR_GRAPHICS_API_DONTSAVE_CANCEL = "Discard changes and restart";
-        private const string CHANGE_EDITOR_GRAPHICS_API_CANCEL = "Not now";
+        private const string CHANGE_EDITOR_GRAPHICS_API_OK_SAVE = "Save and Restart";
+        private const string CHANGE_EDITOR_GRAPHICS_API_DONTSAVE_CANCEL = "Discard Changes and Restart";
+        private const string CHANGE_EDITOR_GRAPHICS_API_CANCEL = "Not Now";
 
 
     #endregion
@@ -122,11 +141,13 @@ namespace MagicLeapSetupTool.Editor
         private static MagicLeapSetupWindow _setupWindow;
         private static bool subscribedToUpdate;
         private static ApplyAllState _currentApplyAllState = ApplyAllState.Done;
-        private static bool _loading; 
+        private static bool _loading;
+        private static bool _showPreviousCertificatePrompt = true;
         private static bool _allAutoStepsComplete => MagicLeapSetup.HasCorrectGraphicConfiguration
                                                   && PlayerSettings.colorSpace == ColorSpace.Linear
                                                   && MagicLeapSetup.ExtendedUnityPackageImported
                                                   && MagicLeapSetup.ManifestIsUpdated
+                                                  && MagicLeapSetup.HasRootSDKPath
                                                   && MagicLeapSetup.MagicLeapSettingEnabled
                                                   && MagicLeapSetup.HasLuminInstalled
                                                   && EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin;
@@ -137,10 +158,11 @@ namespace MagicLeapSetupTool.Editor
             {
                 var projectKey = UnityProjectSettingsUtility.GetProjectKey();
                 var path = Path.GetFullPath(Application.dataPath);
-                var postFix = "MAGIC_LEAP_SETUP_KEY";
-                return $"{postFix}_[{projectKey}]-[{path}]";
+                return $"{MAGIC_LEAP_SETUP_POSTFIX_KEY}_[{projectKey}]-[{path}]";
             }
         }
+
+
         static MagicLeapSetupWindow()
         {
            
@@ -158,14 +180,24 @@ namespace MagicLeapSetupTool.Editor
         public static void Open()
         {
 
+            
             var autoShow = EditorPrefs.GetBool(AutoShowEditorPrefKey, true);
+            if (!MagicLeapSetup.HasRootSDKPathInEditorPrefs || !MagicLeapSetup.HasLuminInstalled || EditorUserBuildSettings.activeBuildTarget != BuildTarget.Lumin)
+            {
+                Debug.Log($"{MagicLeapSetup.HasRootSDKPath} | {MagicLeapSetup.HasLuminInstalled} | {EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin}");
+                autoShow = true;
+                EditorPrefs.SetBool(AutoShowEditorPrefKey, true);
+            }
+            
             if (subscribedToUpdate && !autoShow)
             {
+            
               EditorApplication.update -= OnEditorApplicationUpdate;
               subscribedToUpdate = false;
               return;
             }
 
+            _showPreviousCertificatePrompt = EditorPrefs.GetBool(PREVIOUS_CERTIFICATE_PROMPT_KEY, true);
             _currentApplyAllState = ApplyAllState.Done;
             _setupWindow = GetWindow<MagicLeapSetupWindow>(false, WINDOW_TITLE_LABEL);
             _setupWindow.minSize = new Vector2(350, 380);
@@ -179,11 +211,6 @@ namespace MagicLeapSetupTool.Editor
                 EditorApplication.update -= OnEditorApplicationUpdate;
                 subscribedToUpdate = false;
             }
-        }
-
-        private void OnDisable()
-        {
-            EditorPrefs.SetBool(AutoShowEditorPrefKey, !MagicLeapSetup.ValidCertificatePath || !_allAutoStepsComplete);
         }
 
         private void RunApplyAll()
@@ -286,13 +313,28 @@ namespace MagicLeapSetupTool.Editor
 
         public void BrowseForCertificate()
         {
-            var path = EditorUtility.OpenFilePanel(SET_CERTIFICATE_PATH_LABEL, Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "cert");
+            var startDirectory = MagicLeapSetup.PreviousCertificatePath;
+            if (!string.IsNullOrEmpty(startDirectory))
+            {
+                startDirectory= Path.GetDirectoryName(startDirectory);
+            }
+         
+            var path = EditorUtility.OpenFilePanel(SET_CERTIFICATE_PATH_LABEL, startDirectory, "cert");
             if (path.Length != 0)
             {
                 MagicLeapSetup.CertificatePath = path;
             }
         }
 
+        public void BrowseForSDK()
+        {
+        
+            var path = EditorUtility.OpenFolderPanel(LOCATE_SDK_FOLDER_LABEL, MagicLeapSetup.GetCurrentSDKLocation(), MagicLeapSetup.GetCurrentSDKFolderName());
+            if (path.Length != 0)
+            {
+                MagicLeapSetup.SetRootSDK(path);
+            }
+        }
         private static void FullRefresh()
         {
             if (!MagicLeapSetup.CheckingAvailability)
@@ -315,6 +357,27 @@ namespace MagicLeapSetupTool.Editor
             GUILayout.Space(2);
             GUILayout.Space(2);
             GUILayout.EndVertical();
+        }
+
+        private void FoundPreviousCertificateLocationPrompt()
+        {
+            var usePreviousCertificateOption = EditorUtility.DisplayDialogComplex(FOUND_PREVIOUS_CERTIFICATE_TITLE, FOUND_PREVIOUS_CERTIFICATE_MESSAGE,
+                                                                           FOUND_PREVIOUS_CERTIFICATE_OK, FOUND_PREVIOUS_CERTIFICATE_CANCEL, FOUND_PREVIOUS_CERTIFICATE_ALT);
+          
+                switch (usePreviousCertificateOption)
+                {
+                    case 0: //Yes
+                        MagicLeapSetup.CertificatePath = MagicLeapSetup.PreviousCertificatePath;
+                        break;
+                    case 1: //Cancel
+                        EditorPrefs.SetBool(PREVIOUS_CERTIFICATE_PROMPT_KEY, false);
+                        _showPreviousCertificatePrompt = false;
+                        break;
+                    case 2: //Browse
+                        BrowseForCertificate();
+                        break;
+                }
+          
         }
 
         private void ImportSdkPackage()
@@ -395,6 +458,7 @@ namespace MagicLeapSetupTool.Editor
 
             MagicLeapSetup.UpdatedGraphicSettings -= OnUpdateGraphicsApi;
         }
+
         private bool ShowSaveAndQuitGraphicsApiDialogue(List<Scene> dirtyScenes)
         {
             bool doRestart = false;
@@ -586,6 +650,12 @@ namespace MagicLeapSetupTool.Editor
             FullRefresh();
         }
 
+        private void OnDisable()
+        {
+            EditorPrefs.SetBool(PREVIOUS_CERTIFICATE_PROMPT_KEY, true);
+            EditorPrefs.SetBool(AutoShowEditorPrefKey, !MagicLeapSetup.ValidCertificatePath || !_allAutoStepsComplete);
+        }
+
         private void OnFocus()
         {
             if (!MagicLeapSetup.CheckingAvailability)
@@ -610,6 +680,13 @@ namespace MagicLeapSetupTool.Editor
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
             GUILayout.Space(5);
+       
+            if (CustomGuiContent.CustomButtons.DrawConditionButton(new GUIContent(LOCATE_SDK_FOLDER_LABEL), MagicLeapSetup.HasRootSDKPath, new GUIContent(CONDITION_MET_CHANGE_LABEL,MagicLeapSetup.SdkRoot), new GUIContent(LOCATE_SDK_FOLDER_BUTTON_LABEL), Styles.FixButtonStyle, false))
+            {
+                BrowseForSDK();
+            }
+
+            GUI.enabled = MagicLeapSetup.HasRootSDKPath && !_loading;
 
             if (CustomGuiContent.CustomButtons.DrawConditionButton(BUILD_SETTING_LABEL, EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin, CONDITION_MET_LABEL, FIX_SETTING_BUTTON_LABEL, Styles.FixButtonStyle))
             {
@@ -617,7 +694,7 @@ namespace MagicLeapSetupTool.Editor
             }
 
             //Makes sure the user changes to the Lumin Build Target before being able to set the other options
-            GUI.enabled = EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin && !_loading;
+            GUI.enabled = MagicLeapSetup.HasRootSDKPath && EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin && !_loading;
 
             if (CustomGuiContent.CustomButtons.DrawConditionButton(INSTALL_PLUGIN_LABEL, MagicLeapSetup.HasLuminInstalled, CONDITION_MET_LABEL, INSTALL_PLUGIN_BUTTON_LABEL, Styles.FixButtonStyle))
             {
@@ -627,7 +704,7 @@ namespace MagicLeapSetupTool.Editor
             }
 
             //Check for Lumin SDK before allowing user to change sdk settings
-            GUI.enabled = MagicLeapSetup.HasLuminInstalled && !_loading;
+            GUI.enabled = MagicLeapSetup.HasRootSDKPath && EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin && MagicLeapSetup.HasLuminInstalled && !_loading;
 
 
             if (CustomGuiContent.CustomButtons.DrawConditionButton(ENABLE_PLUGIN_SETTINGS_LABEL, MagicLeapSetup.MagicLeapSettingEnabled, CONDITION_MET_LABEL, ENABLE_PLUGIN_LABEL, Styles.FixButtonStyle))
@@ -638,18 +715,15 @@ namespace MagicLeapSetupTool.Editor
             //Check that lumin is enabled before being able to import package and change color space
             GUI.enabled = MagicLeapSetup.MagicLeapSettingEnabled && !_loading;
 
-            if (CustomGuiContent.CustomButtons.DrawConditionButton(UPDATE_MANIFEST_LABEL, MagicLeapSetup.ManifestIsUpdated, CONDITION_MET_LABEL, UPDATE_MANIFEST_BUTTON_LABEL, Styles.FixButtonStyle))
+            if (!_loading && CustomGuiContent.CustomButtons.DrawConditionButton(UPDATE_MANIFEST_LABEL, MagicLeapSetup.ManifestIsUpdated, CONDITION_MET_LABEL, UPDATE_MANIFEST_BUTTON_LABEL, Styles.FixButtonStyle))
             {
                 UpdateManifest();
                 Repaint();
             }
 
-          
-
-            if (CustomGuiContent.CustomButtons.DrawConditionButton(SET_CERTIFICATE_PATH_LABEL, MagicLeapSetup.ValidCertificatePath, CONDITION_MET_LABEL, SET_CERTIFICATE_PATH_BUTTON_LABEL, Styles.FixButtonStyle, SET_CERTIFICATE_HELP_TEXT, Get_CERTIFICATE_URL))
+            if (CustomGuiContent.CustomButtons.DrawConditionButton(SET_CERTIFICATE_PATH_LABEL, MagicLeapSetup.ValidCertificatePath, new GUIContent(CONDITION_MET_CHANGE_LABEL,MagicLeapSetup.CertificatePath), SET_CERTIFICATE_PATH_BUTTON_LABEL, Styles.FixButtonStyle, SET_CERTIFICATE_HELP_TEXT, Get_CERTIFICATE_URL, false))
             {
                 BrowseForCertificate();
-                Repaint();
             }
 
         
@@ -685,6 +759,15 @@ namespace MagicLeapSetupTool.Editor
             {
                 ApplyAll();
                
+            }
+        }
+
+        private void OnInspectorUpdate()
+        {
+        
+            if (!_loading && MagicLeapSetup.MagicLeapSettingEnabled && !MagicLeapSetup.ValidCertificatePath && _showPreviousCertificatePrompt && !string.IsNullOrWhiteSpace(MagicLeapSetup.PreviousCertificatePath))
+            {
+                FoundPreviousCertificateLocationPrompt();
             }
         }
     }

@@ -21,15 +21,18 @@ namespace MagicLeapSetupTool.Editor
         private const string DEFINES_SYMBOL_SEARCH_TARGET = "UnityEngine.XR.MagicLeap"; //Type to search for to enable MAGICLEAP defines symbol
         private const string MAGIC_LEAP_UNITYPACKAGE = "MAGICLEAP";
         private const string PACKAGE_PATH = "../../tools/unity/v{0}/MagicLeap.unitypackage"; // {0} is the SDK version
-
+        private const string LUMIN_SDK_PATH_KEY = "LuminSDKRoot";                            //Editor Pref key to set/get the Lumin SDK
+        private const string CERTIFICATE_PATH_KEY = "LuminCertificate";                      //Editor Pref key to set/get previously used certificate
+        private const string MANIFEST_PATH = ".metadata/sdk.manifest";                       // Path to SDK Manifest 
 
         private const string IMPORTING_PACKAGE_TEXT = "importing [{0}]";                     // {0} is the path  to the unity package
         private const string CANNOT_FIND_PACKAGE_TEXT = "Could not find Unity Package at path [{0}].\n SDK Path: [{1}]\nSDK Version: [{2}]";
         private const string SDK_NOT_INSTALLED_TEXT = "Cannot preform that action while the SDK is not installed in the project";
         private const string FAILED_TO_EXECUTE_ERROR = "Failed to execute [{0}]";                                                                                     //0 is method/action name
         private const string ENABLE_LUMIN_FINISHED_UNSUCCESSFULLY_WARNING = "Unsuccessful call:[{0}]. action finished, but Lumin XR Settings are still not enabled."; //0 is method/action name
-        private const string FAILED_TO_IMPORT_PACKAGE_ERROR = "Failed To Import [{0}.unitypackage] : {1}"; //[0] is package name | [1] is Unity error message
-     
+        private const string FAILED_TO_IMPORT_PACKAGE_ERROR = "Failed To Import [{0}.unitypackage] : {1}";                                                            //[0] is package name | [1] is Unity error message
+        private const string SET_MAGIC_LEAP_DIR_MESSAGE = "Updated Magic Leap SDK path to [{0}].";                                                            //[0] folder path
+
         private static string _certificatePath="";
 
         private static int _busyCounter; //Add value when task starts and remove it when finished
@@ -57,8 +60,11 @@ namespace MagicLeapSetupTool.Editor
         public static bool MagicLeapSettingEnabled { get; private set; }
         public static bool ValidCertificatePath { get; private set; }
         public static int SdkApiLevel { get; private set; }
-        
-
+        public static string PreviousCertificatePath { get; private set; }
+        public static string SdkRoot { get; private set; }
+        // expensive call that should not be called frequently
+        public static bool HasRootSDKPathInEditorPrefs => !string.IsNullOrEmpty(EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null)); 
+        public static bool HasRootSDKPath { get; private set; }
         // "../../tools/unity/v{0}/MagicLeap.unitypackage"
         public static string GetUnityPackagePath => Path.Combine(LuminPackageUtility.GetSDKPath(), string.Format(PACKAGE_PATH, LuminPackageUtility.GetSdkVersion()));
 
@@ -66,22 +72,19 @@ namespace MagicLeapSetupTool.Editor
         {
             get
             {
-                if (!HasLuminInstalled || (!string.IsNullOrEmpty(_certificatePath) && File.Exists(_certificatePath)))
-                {
-                    ValidCertificatePath = HasLuminInstalled && !string.IsNullOrEmpty(_certificatePath) && File.Exists(_certificatePath);
-                    return _certificatePath;
-             
-                }
-                else
+                if (HasLuminInstalled  && (string.IsNullOrEmpty(_certificatePath) || !File.Exists(_certificatePath)))
                 {
                     _certificatePath = UnityProjectSettingsUtility.Lumin.GetInternalCertificatePath();
-                    ValidCertificatePath = HasLuminInstalled && !string.IsNullOrEmpty(_certificatePath) && File.Exists(_certificatePath);
-                    return _certificatePath;
+             
                 }
+
+                ValidCertificatePath = HasLuminInstalled && !string.IsNullOrEmpty(_certificatePath) && File.Exists(_certificatePath);
+                return _certificatePath;
 
             }
             set
             {
+                EditorPrefs.SetString(CERTIFICATE_PATH_KEY, value);
                 UnityProjectSettingsUtility.Lumin.SetInternalCertificatePath(value);
                 _certificatePath = value;
                 ValidCertificatePath = HasLuminInstalled && !string.IsNullOrEmpty(_certificatePath) && File.Exists(_certificatePath);
@@ -147,19 +150,149 @@ namespace MagicLeapSetupTool.Editor
             _busyCounter++;
 #if MAGICLEAP
             CertificatePath = UnityProjectSettingsUtility.Lumin.GetInternalCertificatePath();
-         
+            SdkRoot = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
+            HasRootSDKPath = (!string.IsNullOrEmpty(SdkRoot) && Directory.Exists(SdkRoot));
+            PreviousCertificatePath = EditorPrefs.GetString(CERTIFICATE_PATH_KEY, "");
+
             SdkApiLevel = LuminPackageUtility.GetSdkApiLevel();
             MagicLeapSettingEnabled = LuminPackageUtility.IsLuminXREnabled();
             ExtendedUnityPackageImported = TypeUtility.FindTypeByPartialName(TEST_FOR_ML_SCRIPT) != null;
             ValidCertificatePath = !string.IsNullOrEmpty(CertificatePath) && File.Exists(CertificatePath);
 
 #endif
-           
+
             HasCorrectGraphicConfiguration = CorrectGraphicsConfiguration();
             _busyCounter--;
-          
+
         }
 
+
+        public static void SetRootSDK(string path)
+        {
+            SdkRoot = path;
+            EditorPrefs.SetString(LUMIN_SDK_PATH_KEY, path);
+            Debug.Log(string.Format(SET_MAGIC_LEAP_DIR_MESSAGE, path));
+            HasRootSDKPath = (!string.IsNullOrEmpty(SdkRoot) && Directory.Exists(SdkRoot));
+        }
+
+        public static string GetCurrentSDKFolderName()
+        {
+            var currentPath = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
+            if (string.IsNullOrEmpty(currentPath) || !Directory.Exists(currentPath))
+            {
+                currentPath = FindSDKPath();
+            }
+
+            //version folder i.e: v[x].[x].[x]
+            if (currentPath.Contains("v"))
+            {
+                string dirName = new DirectoryInfo(currentPath).Name;
+                return dirName;
+            }
+            else
+                return "";
+
+        }
+
+        public static string GetCurrentSDKLocation()
+        {
+            var currentPath = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
+            if (string.IsNullOrEmpty(currentPath) || !Directory.Exists(currentPath))
+            {
+                currentPath = DefaultSDKPath();
+            }
+            //select folder just outside of the version folder i.e: PATH/v[x].[x].[x]
+            if (currentPath.Contains("v"))
+            {
+                return Path.GetFullPath(Path.Combine(currentPath,"../"));
+            }
+            else
+            {
+                return currentPath;
+            }
+
+      
+
+        }
+
+        public static string GetCurrentSDKPath()
+        {
+            var currentPath = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
+            if (string.IsNullOrEmpty(currentPath) || !Directory.Exists(currentPath))
+            {
+                currentPath = DefaultSDKPath();
+            }
+
+            return currentPath;
+
+        }
+        public static string DefaultSDKPath()
+        {
+            var root = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            if (string.IsNullOrEmpty(root))
+            {
+                root = Environment.GetEnvironmentVariable("HOME");
+            }
+            if (!string.IsNullOrEmpty(root))
+            {
+                var sdkRoot = Path.Combine(root, "MagicLeap/mlsdk/");
+                return sdkRoot;
+            }
+            else
+            {
+                return Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            }
+        }
+
+        public static string FindSDKPath()
+        {
+              var editorSdkPath = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
+            if (string.IsNullOrEmpty(editorSdkPath) || !Directory.Exists(editorSdkPath)/* && File.Exists(Path.Combine(editorSdkPath, MANIFEST_PATH))*/)
+            {
+                var root = Environment.GetEnvironmentVariable("USERPROFILE") ?? Environment.GetEnvironmentVariable("HOME");
+
+
+                if (!string.IsNullOrEmpty(root))
+                {
+                    var sdkRoot = Path.Combine(root, "MagicLeap/mlsdk/");
+                    if (!string.IsNullOrEmpty(sdkRoot))
+                    {
+
+                        var getVersionDirectories = Directory.EnumerateDirectories(sdkRoot, "v*");
+                        var newestVersion = new Version(0, 0, 0);
+                        string newestFolder = "";
+
+                        foreach (var versionDirectory in getVersionDirectories)
+                        {
+
+                            string dirName = new DirectoryInfo(versionDirectory).Name;
+                            var versionOfFolder = new Version(dirName.Replace("v", ""));
+                            var result = versionOfFolder.CompareTo(newestVersion);
+                            if (result > 0)
+                            {
+                                newestVersion = versionOfFolder;
+                                newestFolder = versionDirectory;
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(newestFolder))
+                        {
+                            return editorSdkPath;
+                        }
+                      
+                    }
+
+
+                }
+            }
+            else
+            {
+                return editorSdkPath;
+            }
+
+            return null;
+        }
+     
         public static void CheckSDKAvailability()
         {
 
@@ -184,6 +317,8 @@ namespace MagicLeapSetupTool.Editor
             LuminPackageUtility.AddLuminSdkPackage();
         }
 
+
+       
         private static void UpdateDefineSymbols()
         {
             if (DefineSymbolsUtility.TypeExists(DEFINES_SYMBOL_SEARCH_TARGET))

@@ -14,7 +14,14 @@ namespace MagicLeapSetupTool.Editor
     {
         public static class CustomButtons
         {
-            public static bool DrawConditionButton(string label, bool condition, string conditionMetText, string conditionMissingText, GUIStyle buttonStyle, string helpText, string url)
+            public static bool DrawConditionButton(string label, bool condition, string conditionMetText, string conditionMissingText, GUIStyle buttonStyle, string helpText, string url, bool disableOnConditionMet = true)
+            {
+                return DrawConditionButton(label, condition, new GUIContent(conditionMetText), conditionMissingText, buttonStyle, helpText, url, disableOnConditionMet);
+            }
+
+     
+
+            public static bool DrawConditionButton(string label, bool condition, GUIContent conditionMetText, string conditionMissingText, GUIStyle buttonStyle, string helpText, string url, bool disableOnConditionMet = true)
             {
                 GUILayout.BeginVertical(EditorStyles.helpBox);
                 GUI.backgroundColor = Color.clear;
@@ -25,19 +32,26 @@ namespace MagicLeapSetupTool.Editor
 
                 EditorGUILayout.LabelField(label, EditorStyles.boldLabel, GUILayout.ExpandWidth(false));
                 DisplayLink(linkContent, new Uri(url), 0, EditorStyles.boldLabel);
-                var wasEnabled = GUI.enabled;
-
+                var lastEnabledGUIState = GUI.enabled;
+                bool returnValue = false;
                 GUILayout.FlexibleSpace();
                 if (condition)
                 {
                     GUI.backgroundColor = Color.green;
 
-                    GUI.enabled = false;
+                    if (disableOnConditionMet)
+                    {
+                        GUI.enabled = false;
+                    }
                     if (GUILayout.Button(conditionMetText, buttonStyle))
                     {
+                        returnValue = true;
                     }
 
-                    GUI.enabled = wasEnabled;
+                    if (disableOnConditionMet)
+                    {
+                        GUI.enabled = lastEnabledGUIState;
+                    }
                 }
                 else
                 {
@@ -53,28 +67,41 @@ namespace MagicLeapSetupTool.Editor
                 GUILayout.Space(5);
 
                 GUI.backgroundColor = Color.white;
-                return false;
+                return returnValue;
+            }
+            public static bool DrawConditionButton(string label, bool condition, string conditionMetText, string conditionMissingText, GUIStyle buttonStyle, bool disableOnConditionMet = true, string conditionMetTooltip="", GUIStyle groupStyle = null, Color? conditionMetColor = null, Color? conditionMissingColor = null)
+            {
+                return DrawConditionButton(new GUIContent(label), condition, new GUIContent(conditionMetText, conditionMetTooltip), new GUIContent(conditionMissingText), buttonStyle, disableOnConditionMet, groupStyle, conditionMetColor, conditionMissingColor);
             }
 
 
-            public static bool DrawConditionButton(string label, bool condition, string conditionMetText, string conditionMissingText, GUIStyle buttonStyle, GUIStyle groupStyle = null, Color? conditionMetColor = null, Color? conditionMissingColor = null)
+
+            public static bool DrawConditionButton(GUIContent label, bool condition, GUIContent conditionMetText, GUIContent conditionMissingText, GUIStyle buttonStyle, bool disableOnConditionMet = true, GUIStyle groupStyle = null, Color? conditionMetColor = null, Color? conditionMissingColor = null)
             {
                 groupStyle ??= EditorStyles.helpBox;
 
                 var lastEnabledGUIState = GUI.enabled;
-
+                bool returnValue = false;
                 GUILayout.BeginHorizontal(groupStyle);
                 EditorGUILayout.LabelField(label, EditorStyles.boldLabel, GUILayout.ExpandWidth(false));
                 GUILayout.FlexibleSpace();
                 if (condition)
                 {
                     GUI.backgroundColor = conditionMetColor ?? Color.green;
-                    GUI.enabled = false;
-                    if (GUILayout.Button(conditionMetText, buttonStyle))
+                    if (disableOnConditionMet)
                     {
+                        GUI.enabled = false;
                     }
 
-                    GUI.enabled = lastEnabledGUIState;
+                    if (GUILayout.Button(conditionMetText, buttonStyle))
+                    {
+                        returnValue= true;
+                    }
+
+                    if (disableOnConditionMet)
+                    {
+                        GUI.enabled = lastEnabledGUIState;
+                    }
                 }
                 else
                 {
@@ -89,7 +116,7 @@ namespace MagicLeapSetupTool.Editor
                 GUILayout.Space(5);
 
                 GUI.backgroundColor = Color.white;
-                return false;
+                return returnValue;
             }
         }
 
