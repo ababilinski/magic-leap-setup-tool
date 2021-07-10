@@ -84,7 +84,11 @@ namespace MagicLeapSetupTool.Editor
             }
             set
             {
-                EditorPrefs.SetString(CERTIFICATE_PATH_KEY, value);
+                if (!string.IsNullOrEmpty(value))
+                {
+                    EditorPrefs.SetString(CERTIFICATE_PATH_KEY, value);
+                }
+
                 UnityProjectSettingsUtility.Lumin.SetInternalCertificatePath(value);
                 _certificatePath = value;
                 ValidCertificatePath = HasLuminInstalled && !string.IsNullOrEmpty(_certificatePath) && File.Exists(_certificatePath);
