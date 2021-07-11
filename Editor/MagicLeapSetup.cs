@@ -151,13 +151,12 @@ namespace MagicLeapSetupTool.Editor
 
         public static void RefreshVariables()
         {
+            SdkRoot = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
+            HasRootSDKPath = (!string.IsNullOrEmpty(SdkRoot) && Directory.Exists(SdkRoot));
             _busyCounter++;
 #if MAGICLEAP
             CertificatePath = UnityProjectSettingsUtility.Lumin.GetInternalCertificatePath();
-            SdkRoot = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
-            HasRootSDKPath = (!string.IsNullOrEmpty(SdkRoot) && Directory.Exists(SdkRoot));
             PreviousCertificatePath = EditorPrefs.GetString(CERTIFICATE_PATH_KEY, "");
-
             SdkApiLevel = LuminPackageUtility.GetSdkApiLevel();
             MagicLeapSettingEnabled = LuminPackageUtility.IsLuminXREnabled();
             ExtendedUnityPackageImported = TypeUtility.FindTypeByPartialName(TEST_FOR_ML_SCRIPT) != null;
