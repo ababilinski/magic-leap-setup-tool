@@ -78,7 +78,10 @@ namespace MagicLeapSetupTool.Editor
 
             public static bool DrawConditionButton(GUIContent label, bool condition, GUIContent conditionMetText, GUIContent conditionMissingText, GUIStyle buttonStyle, bool disableOnConditionMet = true, GUIStyle groupStyle = null, Color? conditionMetColor = null, Color? conditionMissingColor = null)
             {
-                groupStyle ??= EditorStyles.helpBox;
+                if (groupStyle == null)
+                {
+                    groupStyle = EditorStyles.helpBox;
+                }
 
                 var lastEnabledGUIState = GUI.enabled;
                 bool returnValue = false;

@@ -184,7 +184,7 @@ namespace MagicLeapSetupTool.Editor
             var autoShow = EditorPrefs.GetBool(AutoShowEditorPrefKey, true);
             if (!MagicLeapSetup.HasRootSDKPathInEditorPrefs || !MagicLeapSetup.HasLuminInstalled || EditorUserBuildSettings.activeBuildTarget != BuildTarget.Lumin)
             {
-                Debug.Log($"{MagicLeapSetup.HasRootSDKPath} | {MagicLeapSetup.HasLuminInstalled} | {EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin}");
+      
                 autoShow = true;
                 EditorPrefs.SetBool(AutoShowEditorPrefKey, true);
             }
