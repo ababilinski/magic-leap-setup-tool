@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.2-beta] - 2021-07-19
 ### Added
 - Package manifest
+### Fixed
+- assembly definition file only runs in editor
 
 ## [0.2.1-beta] - 2021-07-11
 ### Fixed
