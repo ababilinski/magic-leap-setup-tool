@@ -24,63 +24,12 @@ namespace MagicLeapSetupTool.Editor.Utilities
     {
       string definesString =
         PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
-      List<string> allDefines = definesString.Split(';').ToList();
-      return allDefines.Contains(symbol);
+
+      return definesString.Contains(symbol);
     }
 
-    public static bool ContainsDefine(string define)
-    {
-      foreach (BuildTargetGroup targetGroup in System.Enum.GetValues(typeof(BuildTargetGroup)))
-      {
-        if (targetGroup == BuildTargetGroup.Unknown || IsObsolete(targetGroup))
-          continue;
 
-        string defineSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(targetGroup);
 
-        if (!defineSymbols.Contains(define))
-          return false;
-      }
-
-      return true;
-    }
-    /// <summary>
-    /// Add define symbols as soon as Unity gets done compiling.
-    /// </summary>
-    public static void AddDefineSymbols(string[] symbols)
-    {
-      string definesString =
-          PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
-      List<string> allDefines = definesString.Split(';').ToList();
-      allDefines.AddRange(symbols.Except(allDefines));
-      PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup,
-                                                       string.Join(";", allDefines.ToArray()));
-    }
-
-    /// <summary>
-    /// Remove define symbols as soon as Unity gets done compiling.
-    /// </summary>
-    public static void RemoveDefineSymbols(string[] symbols)
-    {
-      string definesString =
-          PlayerSettings.GetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
-      List<string> allDefines = definesString.Split(';').ToList();
-
-      for (int i = 0; i < symbols.Length; i++)
-      {
-        if (!allDefines.Contains(symbols[i]))
-        {
-        
-
-        }
-        else
-        {
-          allDefines.Remove(symbols[i]);
-        }
-
-      }
-      PlayerSettings.SetScriptingDefineSymbolsForGroup(EditorUserBuildSettings.selectedBuildTargetGroup,
-                                                       string.Join(";", allDefines.ToArray()));
-    }
 
 
     /// <summary>

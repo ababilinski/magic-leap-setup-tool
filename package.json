@@ -4,7 +4,7 @@
     "url": "https://github.com/ababilinski/magic-leap-setup-tool"
   },
   "dependencies": {},
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "A tool to configure your Unity project to build for Magic Leap\n\n\n>This is not an official Magic Leap tool",
   "displayName": "Magic Leap Setup Tool",
   "keywords": [
