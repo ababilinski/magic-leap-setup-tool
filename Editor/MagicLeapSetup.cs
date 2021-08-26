@@ -58,7 +58,7 @@ namespace MagicLeapSetupTool.Editor
         public static Action ImportPackageProcessCancelled;
         public static Action ImportPackageProcessFailed;
         public static Action<bool> UpdatedGraphicSettings;
-        public static bool IsBusy => _busyCounter > 0;
+        public static bool IsBusy => BusyCounter > 0;
 
         public static bool HasLuminInstalled
         {
@@ -132,10 +132,23 @@ namespace MagicLeapSetupTool.Editor
             }
         }
 
+        public static int BusyCounter
+        {
+            get => _busyCounter;
+            set
+            {
 
+                _busyCounter = Mathf.Clamp(value,0,100);
+            }
+        }
+
+        public static void ResetBusyCounter()
+        {
+            BusyCounter = 0;
+        }
         public static void UpdateManifest()
         {
-            _busyCounter++;
+            BusyCounter++;
 #if MAGICLEAP
             Debug.Log($"Setting SDK Version To: {SdkApiLevel}");
             RefreshVariables();
@@ -168,14 +181,16 @@ namespace MagicLeapSetupTool.Editor
 
             serializedObject.Update();
 #endif
-            _busyCounter--;
+            BusyCounter--;
         }
 
         public static void RefreshVariables()
         {
+
+            
             SdkRoot = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
             HasRootSDKPath = !string.IsNullOrEmpty(SdkRoot) && Directory.Exists(SdkRoot);
-            _busyCounter++;
+            BusyCounter++;
 #if MAGICLEAP
             
             
@@ -207,7 +222,7 @@ namespace MagicLeapSetupTool.Editor
 #endif
 
             HasCorrectGraphicConfiguration = CorrectGraphicsConfiguration();
-            _busyCounter--;
+            BusyCounter--;
         }
 
 
@@ -322,8 +337,8 @@ namespace MagicLeapSetupTool.Editor
             if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin)
             {
                 CheckingAvailability = true;
-                _busyCounter++;
-                _busyCounter++;
+                BusyCounter++;
+                BusyCounter++;
                 MagicLeapLuminPackageUtility.CheckForLuminSdkPackage(OnCheckForLuminRequestFinished);
                 MagicLeapLuminPackageUtility.CheckForMagicLeapSdkPackage(onCheckForMagicLeapPackageInPackageManager);
            
@@ -335,7 +350,7 @@ namespace MagicLeapSetupTool.Editor
             {
               
                 RefreshVariables();
-                _busyCounter--;
+                BusyCounter--;
                 HasMagicLeapSdkInPackageManager = hasPackage;
             }
 
@@ -348,14 +363,14 @@ namespace MagicLeapSetupTool.Editor
                     RefreshVariables();
                 }
 
-                _busyCounter--;
+                BusyCounter--;
                 CheckingAvailability = false;
             }
         }
 
         public static void AddLuminSdkAndRefresh()
         {
-            _busyCounter++;
+            BusyCounter++;
 
             MagicLeapLuminPackageUtility.AddLuminSdkPackage(OnAddLuminPackageRequestFinished);
 
@@ -376,13 +391,13 @@ namespace MagicLeapSetupTool.Editor
                 }
 
 
-                _busyCounter--;
+                BusyCounter--;
             }
         }
 
         private static void AddMagicLeapSdkFromPackageManagerAndRefresh()
         {
-            _busyCounter++;
+            BusyCounter++;
 
             MagicLeapLuminPackageUtility.AddMagicLeapSdkPackage(OnAddMagicLeapPackageRequestFinished);
 
@@ -407,35 +422,44 @@ namespace MagicLeapSetupTool.Editor
                     Debug.LogError(string.Format(FAILED_TO_EXECUTE_ERROR, "Add Magic Leap Sdk Package"));
                 }
 
-                _busyCounter--;
+                BusyCounter--;
             }
         }
 
         private static void UpdateDefineSymbols()
         {
             var sdkPath = EditorPrefs.GetString("LuminSDKRoot");
+            
 
+            EditorApplication.delayCall += () =>
+                                           {
+                                               if (!DefineSymbolsUtility.DirectoryPathExistsWildCard(Path.GetFullPath(Path.Combine(Application.dataPath, "../Library/PackageCache")), "com.unity.xr.magicleap"))
+                                               {
+                                                   if (DefineSymbolsUtility
+                                                      .ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL))
+                                                   {
+                                                       DefineSymbolsUtility
+                                                          .RemoveDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
+                                                       Debug.Log("REMOVE!");
+                                                   }
+                                               }
+                                               else
+                                               {
+                                                   if (!string.IsNullOrWhiteSpace(sdkPath) && Directory.Exists(sdkPath) && !DefineSymbolsUtility
+                                                          .ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL))
+                                                   {
+                                                       DefineSymbolsUtility.AddDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
+                                                   }
+                                               }
 
-            if (!string.IsNullOrWhiteSpace(sdkPath) && Directory.Exists(sdkPath) && DefineSymbolsUtility.TypeExists(DEFINES_SYMBOL_SEARCH_TARGET))
-            {
-                if (!DefineSymbolsUtility.ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL))
-                {
-                    DefineSymbolsUtility.AddDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
-                }
-            }
-            else
-            {
-                if (DefineSymbolsUtility.ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL))
-                {
-                    DefineSymbolsUtility.RemoveDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
-                }
-            }
+                                           };
+      
         }
 
 
         public static void EnableLuminXRPluginAndRefresh()
         {
-            _busyCounter++;
+            BusyCounter++;
             MagicLeapLuminPackageUtility.EnableLuminXRFinished += OnEnableMagicLeapPluginFinished;
             MagicLeapLuminPackageUtility.EnableLuminXRPlugin();
         }
@@ -456,7 +480,7 @@ namespace MagicLeapSetupTool.Editor
                 Debug.LogError(string.Format(FAILED_TO_EXECUTE_ERROR, "Enable Lumin XR Package"));
             }
 
-            _busyCounter--;
+            BusyCounter--;
             MagicLeapLuminPackageUtility.EnableLuminXRFinished -= OnEnableMagicLeapPluginFinished;
         }
 
@@ -476,10 +500,10 @@ namespace MagicLeapSetupTool.Editor
 
         public static void RemoveMagicLeapPackageManagerSDK(Action finished)
         {
-            _busyCounter++;
+            BusyCounter++;
             MagicLeapLuminPackageUtility.RemoveMagicLeapPackageManagerSDK(() =>
                                                                           {
-                                                                              _busyCounter--;
+                                                                              BusyCounter--;
                                                                               finished?.Invoke();
                                                                           });
         }
@@ -490,7 +514,7 @@ namespace MagicLeapSetupTool.Editor
             {
                 MagicLeapLuminPackageUtility.RemoveMagicLeapPackageManagerSDK(() =>
                                                                               {
-                                                                                  _busyCounter++;
+                                                                                  BusyCounter++;
                                                                                   var unityPackagePath = MagicLeapLuminPackageUtility.GetUnityPackagePath;
                                                                                   if (File.Exists(unityPackagePath))
                                                                                   {
@@ -528,7 +552,7 @@ namespace MagicLeapSetupTool.Editor
                 ImportPackageProcessCancelled = null;
                 ImportPackageProcessComplete = null;
                 ImportPackageProcessFailed = null;
-                _busyCounter--;
+                BusyCounter--;
             }
         }
 
@@ -543,7 +567,7 @@ namespace MagicLeapSetupTool.Editor
                 ImportPackageProcessCancelled = null;
                 ImportPackageProcessComplete = null;
                 ImportPackageProcessFailed = null;
-                _busyCounter--;
+                BusyCounter--;
             }
         }
 
@@ -558,13 +582,13 @@ namespace MagicLeapSetupTool.Editor
                 ImportPackageProcessCancelled = null;
                 ImportPackageProcessComplete = null;
                 ImportPackageProcessFailed = null;
-                _busyCounter--;
+                BusyCounter--;
             }
         }
 
         public static void UpdateGraphicsSettings()
         {
-            _busyCounter++;
+            BusyCounter++;
 
             var standaloneWindowsResetRequired = UnityProjectSettingsUtility.SetGraphicsApi(BuildTarget.StandaloneWindows, GraphicsDeviceType.OpenGLCore, 0);
             var standaloneWindows64ResetRequired = UnityProjectSettingsUtility.SetGraphicsApi(BuildTarget.StandaloneWindows64, GraphicsDeviceType.OpenGLCore, 0);
@@ -588,12 +612,12 @@ namespace MagicLeapSetupTool.Editor
             }
 
 
-            _busyCounter--;
+            BusyCounter--;
         }
 
         private static bool CorrectGraphicsConfiguration()
         {
-            _busyCounter++;
+            BusyCounter++;
 
         #region Windows
 
@@ -602,7 +626,7 @@ namespace MagicLeapSetupTool.Editor
             correctSetup = hasGraphicsDevice && !UnityProjectSettingsUtility.GetAutoGraphicsApi(BuildTarget.StandaloneWindows);
             if (!correctSetup)
             {
-                _busyCounter--;
+                BusyCounter--;
                 return false;
             }
 
@@ -614,7 +638,7 @@ namespace MagicLeapSetupTool.Editor
             correctSetup = hasGraphicsDevice && !UnityProjectSettingsUtility.GetAutoGraphicsApi(BuildTarget.StandaloneOSX);
             if (!correctSetup)
             {
-                _busyCounter--;
+                BusyCounter--;
                 return false;
             }
 
@@ -626,13 +650,13 @@ namespace MagicLeapSetupTool.Editor
             correctSetup = hasGraphicsDevice && !UnityProjectSettingsUtility.GetAutoGraphicsApi(BuildTarget.StandaloneLinux64);
             if (!correctSetup)
             {
-                _busyCounter--;
+                BusyCounter--;
                 return false;
             }
 
         #endregion
 
-            _busyCounter--;
+            BusyCounter--;
             return correctSetup;
         }
 

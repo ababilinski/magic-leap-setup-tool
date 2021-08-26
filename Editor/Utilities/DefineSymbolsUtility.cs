@@ -119,7 +119,15 @@ namespace MagicLeapSetupTool.Editor.Utilities
     /// </summary>
     public static bool DirectoryPathExistsWildCard(string path, string searchPattern)
     {
-      return Directory.EnumerateDirectories(path, searchPattern).Any();
+      foreach (var directory in Directory.EnumerateDirectories(path))
+      {
+        if(directory.Contains(searchPattern))
+        {
+          return true;
+        }
+      }
+
+      return false;
     }
 
     /// <summary>
