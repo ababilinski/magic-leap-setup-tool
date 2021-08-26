@@ -4,6 +4,8 @@
 */
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -13,6 +15,11 @@ namespace MagicLeapSetupTool.Editor
     public static class MagicLeapSetupAutoRun
     {
 
+    #region EDITOR PREFS
+
+        private const string MAGICLEAP_AUTO_SETUP_PREF = "MAGICLEAP-AUTO-SETUP";
+
+    #endregion
     #region DEBUG TEXT
 
         private const string CHANGING_BUILD_PLATFORM_DEBUG = "Setting Build Platform To Lumin...";
@@ -52,16 +59,38 @@ namespace MagicLeapSetupTool.Editor
                                                    && MagicLeapSetup.HasCompatibleMagicLeapSdk
                                                    && EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin;
 
-        internal static void Stop()
+        internal static ApplyAllState CurrentApplyAllState
         {
-            if (_currentApplyAllState != ApplyAllState.Done)
+            get => _currentApplyAllState;
+            set
             {
-                EditorApplication.update -= OnEditorApplicationUpdate;
+                EditorPrefs.SetString(MAGICLEAP_AUTO_SETUP_PREF, value.ToString());
+                _currentApplyAllState = value;
             }
-
-            _currentApplyAllState = ApplyAllState.Done;
         }
 
+        public static void CheckLastAutoSetupState()
+        {
+           
+           if(Enum.TryParse(EditorPrefs.GetString(MAGICLEAP_AUTO_SETUP_PREF),true, out ApplyAllState value))
+           {
+        
+               CurrentApplyAllState = value;
+           }
+           else
+           {
+               _currentApplyAllState = ApplyAllState.Done;
+           }
+         
+        }
+
+        internal static void Stop()
+        {
+           
+
+            CurrentApplyAllState = ApplyAllState.Done;
+        }
+     
         internal static void RunApplyAll()
         {
             if (!_allAutoStepsComplete)
@@ -72,18 +101,20 @@ namespace MagicLeapSetupTool.Editor
                 switch (dialogComplex)
                 {
                     case 0: //Continue
-                        _currentApplyAllState = ApplyAllState.SwitchBuildTarget;
+                        CurrentApplyAllState = ApplyAllState.SwitchBuildTarget;
                         break;
                     case 1: //Stop
-                        _currentApplyAllState = ApplyAllState.Done;
+                        CurrentApplyAllState = ApplyAllState.Done;
                         break;
                     case 2: //Go to documentation
                         Help.BrowseURL(MagicLeapSetupWindow.SETUP_ENVIRONMENT_URL);
-                        _currentApplyAllState = ApplyAllState.Done;
+                        CurrentApplyAllState = ApplyAllState.Done;
                         break;
                 }
 
-                EditorApplication.update += OnEditorApplicationUpdate;
+               
+               
+             
             }
             else if (!MagicLeapSetup.ValidCertificatePath)
             {
@@ -96,11 +127,11 @@ namespace MagicLeapSetupTool.Editor
                         MagicLeapSetup.BrowseForCertificate();
                         break;
                     case 1: //Stop
-                        _currentApplyAllState = ApplyAllState.Done;
+                        CurrentApplyAllState = ApplyAllState.Done;
                         break;
                     case 2: //Go to documentation
                         Help.BrowseURL(MagicLeapSetupWindow.SETUP_ENVIRONMENT_URL);
-                        _currentApplyAllState = ApplyAllState.Done;
+                        CurrentApplyAllState = ApplyAllState.Done;
                         break;
                 }
             }
@@ -111,24 +142,22 @@ namespace MagicLeapSetupTool.Editor
             }
         }
 
-        private static void OnEditorApplicationUpdate()
-        {
-            var _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || MagicLeapSetup.IsBusy || EditorApplication.isUpdating;
 
-            if (_currentApplyAllState != ApplyAllState.Done && !_loading)
+        internal static void Tick()
+        {
+          
+            var _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || MagicLeapSetup.IsBusy || EditorApplication.isUpdating;
+            if (CurrentApplyAllState != ApplyAllState.Done && !_loading)
             {
                 ApplyAll();
             }
 
-            if (_currentApplyAllState == ApplyAllState.Done)
-            {
-                EditorApplication.update -= OnEditorApplicationUpdate;
-            }
+           
         }
 
         private static void ApplyAll()
         {
-            switch (_currentApplyAllState)
+            switch (CurrentApplyAllState)
             {
                 case ApplyAllState.SwitchBuildTarget:
                     if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Lumin)
@@ -137,18 +166,19 @@ namespace MagicLeapSetupTool.Editor
                         EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Lumin, BuildTarget.Lumin);
                     }
 
-                    _currentApplyAllState = ApplyAllState.InstallLumin;
+                    CurrentApplyAllState = ApplyAllState.InstallLumin;
                     break;
                 case ApplyAllState.InstallLumin:
                     if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin)
                     {
+                        Debug.Log(!MagicLeapSetup.HasLuminInstalled);
                         if (!MagicLeapSetup.HasLuminInstalled)
                         {
                             Debug.Log(INSTALLING_LUMIN_SDK_DEBUG);
                             MagicLeapSetup.AddLuminSdkAndRefresh();
                         }
 
-                        _currentApplyAllState = ApplyAllState.EnableXrPackage;
+                        CurrentApplyAllState = ApplyAllState.EnableXrPackage;
                     }
 
                     break;
@@ -166,7 +196,7 @@ namespace MagicLeapSetupTool.Editor
                             }
                         }
 
-                        _currentApplyAllState = ApplyAllState.UpdateManifest;
+                        CurrentApplyAllState = ApplyAllState.UpdateManifest;
                     }
 
                     break;
@@ -179,7 +209,7 @@ namespace MagicLeapSetupTool.Editor
                             MagicLeapSetup.UpdateManifest();
                         }
 
-                        _currentApplyAllState = ApplyAllState.ChangeColorSpace;
+                        CurrentApplyAllState = ApplyAllState.ChangeColorSpace;
                     }
 
                     break;
@@ -193,7 +223,7 @@ namespace MagicLeapSetupTool.Editor
                             PlayerSettings.colorSpace = ColorSpace.Linear;
                         }
 
-                        _currentApplyAllState = ApplyAllState.ImportSdkUnityPackage;
+                        CurrentApplyAllState = ApplyAllState.ImportSdkUnityPackage;
                     }
 
                     break;
@@ -215,7 +245,7 @@ namespace MagicLeapSetupTool.Editor
                                 }
 
                                 Debug.Log(IMPORTING_LUMIN_UNITYPACKAGE_DEBUG);
-                                _currentApplyAllState = ApplyAllState.ChangeGraphicsApi;
+                                CurrentApplyAllState = ApplyAllState.ChangeGraphicsApi;
                             }
                             else
                             {
@@ -247,7 +277,7 @@ namespace MagicLeapSetupTool.Editor
                             }
                         }
 
-                        _currentApplyAllState = ApplyAllState.Done;
+                        CurrentApplyAllState = ApplyAllState.Done;
                     }
 
                     break;
@@ -260,7 +290,7 @@ namespace MagicLeapSetupTool.Editor
 
     #region ENUMS
 
-        private enum ApplyAllState
+        internal enum ApplyAllState
         {
             SwitchBuildTarget,
             InstallLumin,
