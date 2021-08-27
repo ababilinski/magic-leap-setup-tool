@@ -166,6 +166,81 @@ namespace MagicLeapSetupTool.Editor.Utilities
             }
         }
 
+        public static void EmbedPackage(string packageName, Action<bool> success)
+        {
+             
+                        ListRequest listRequest = Client.List(true);
+                        EditorApplication.update += CheckForAddedPackageProgress;
+
+                       void CheckForAddedPackageProgress()
+                       {
+                           bool packageFound = false;
+                            if (listRequest.IsCompleted)
+                            {
+                                if (listRequest.Status == StatusCode.Success)
+                                {
+                                    foreach (var package in listRequest.Result)
+                                    {
+                                        // Only retrieve packages that are currently installed in the
+                                        // project (and are neither Built-In nor already Embedded)
+                                        if (package.isDirectDependency
+                                         && package.source
+                                         != PackageSource.BuiltIn
+                                         && package.source
+                                         != PackageSource.Embedded)
+                                        {
+                                            if (package.name.Equals(packageName))
+                                            {
+                                                packageFound = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    if (packageFound)
+                                    {
+                                        var embedRequest = Client.Embed(packageName);
+                                        EditorApplication.update += EmbedRequestProgress;
+
+
+
+                                        void EmbedRequestProgress()
+                                        {
+                                            if (embedRequest.IsCompleted)
+                                            {
+                                                if (embedRequest.Status == StatusCode.Success)
+                                                {
+                                                    Debug.Log("Embedded: " + embedRequest.Result.packageId);
+                                                }
+                                                else if (embedRequest.Status >= StatusCode.Failure)
+                                                {
+                                                    Debug.LogError(embedRequest.Error.message);
+                                                }
+
+                                                success.Invoke(embedRequest.Status == StatusCode.Success);
+                                                EditorApplication.update -= EmbedRequestProgress;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Debug.LogError($"Could not find package: [{packageName}]");
+                                        success.Invoke(false);
+                                    }
+
+                            
+                                }
+                                else
+                                {
+                                    Debug.LogError(listRequest.Error.message);
+                                    success.Invoke(false);
+                                }
+
+                                EditorApplication.update -= CheckForAddedPackageProgress;
+
+                            }
+                        }
+        }
        
         public static void PrintPackageList()
         {

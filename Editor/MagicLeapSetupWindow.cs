@@ -5,13 +5,15 @@
 
 
 using System.IO;
+using MagicLeapSetupTool.Editor.ScriptableObjects;
+using MagicLeapSetupTool.Editor.Setup;
 using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
 
 namespace MagicLeapSetupTool.Editor
 {
-    [InitializeOnLoad]
+   
     public class MagicLeapSetupWindow : EditorWindow
     {
     #region EDITOR PREFS
@@ -91,17 +93,12 @@ namespace MagicLeapSetupTool.Editor
     #endregion
 
         internal static MagicLeapSetupWindow _setupWindow;
-        private static bool _subscribedToUpdate;
+        private static bool _showing;
         private static bool _loading;
-        private static bool _showPreviousCertificatePrompt = true;
-
-
-        static MagicLeapSetupWindow()
-        {
-            EditorApplication.update += OnEditorApplicationUpdate;
-
-            _subscribedToUpdate = true;
-        }
+        private static bool _showPreviousCertificatePrompt;
+        private static MagicLeapSetupDataScriptableObject _magicLeapSetupData;
+        private static ImportMagicLeapSdkSetupStep _importMagicLeapSdkSetupStep;
+      
 
         private static string AutoShowEditorPrefKey
         {
@@ -113,12 +110,19 @@ namespace MagicLeapSetupTool.Editor
             }
         }
 
+        private void Awake()
+        {
+            _importMagicLeapSdkSetupStep = new ImportMagicLeapSdkSetupStep();
+            EditorApplication.UnlockReloadAssemblies();
+            _showPreviousCertificatePrompt = true;
+        }
+
         private void OnEnable()
         {
-            EditorApplication.UnlockReloadAssemblies();
+          
             FullRefresh();
-
-           
+            _showing = true;
+            _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
             if (EditorPrefs.GetBool($"{Application.dataPath}-DeletedFoldersReset", false) && EditorPrefs.GetBool($"{Application.dataPath}-Install", false))
             {
                 ImportSdkFromUnityPackageManagerPackage();
@@ -126,6 +130,7 @@ namespace MagicLeapSetupTool.Editor
                 EditorPrefs.SetBool($"{Application.dataPath}-Install", false);
             }
         }
+
 
         private void OnDisable()
         {
@@ -135,6 +140,7 @@ namespace MagicLeapSetupTool.Editor
 
         private void OnDestroy()
         {
+            _showing = false;
             MagicLeapSetup.RefreshVariables();
             MagicLeapSetupAutoRun.Stop();
             MagicLeapSetup.ResetBusyCounter();
@@ -145,7 +151,7 @@ namespace MagicLeapSetupTool.Editor
            
             DrawHeader();
             _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || MagicLeapSetup.IsBusy || EditorApplication.isUpdating;
-
+            _magicLeapSetupData.Loading = _loading;
             if (_loading)
             {
                 DrawWaitingInfo();
@@ -182,7 +188,7 @@ namespace MagicLeapSetupTool.Editor
 
             DrawSetColorSpace();
             DrawImportMagicLeapPackage();
-
+            _importMagicLeapSdkSetupStep?.Draw(_magicLeapSetupData);
 
             DrawUpdateGraphicsApi();
 
@@ -216,39 +222,23 @@ namespace MagicLeapSetupTool.Editor
             }
         }
 
-        private static void OnEditorApplicationUpdate()
-        {
-            Open();
-        }
+     
 
         [MenuItem(WINDOW_PATH)]
         public static void Open()
         {
-            var autoShow = EditorPrefs.GetBool(AutoShowEditorPrefKey, true) && _subscribedToUpdate;
-            if (!MagicLeapSetup.HasRootSDKPathInEditorPrefs || !MagicLeapSetup.HasLuminInstalled || EditorUserBuildSettings.activeBuildTarget != BuildTarget.Lumin || !MagicLeapSetup.HasCompatibleMagicLeapSdk)
-            {
-                autoShow = true;
-                EditorPrefs.SetBool(AutoShowEditorPrefKey, true);
-            }
-
-            if (_subscribedToUpdate)
-            {
-                EditorApplication.update -= OnEditorApplicationUpdate;
-                _subscribedToUpdate = false;
-                if (!autoShow)
-                {
-                    return;
-                }
-            }
+       
 
             MagicLeapSetupAutoRun.CheckLastAutoSetupState();
             _showPreviousCertificatePrompt = EditorPrefs.GetBool(PREVIOUS_CERTIFICATE_PROMPT_KEY, true);
-         
-            _setupWindow = GetWindow<MagicLeapSetupWindow>(false, WINDOW_TITLE_LABEL);
-            _setupWindow.minSize = new Vector2(350, 520);
-            _setupWindow.maxSize = new Vector2(350, 580);
-            EditorApplication.projectChanged += FullRefresh;
-          
+            if (!_showing)
+            {
+                _setupWindow = GetWindow<MagicLeapSetupWindow>(false, WINDOW_TITLE_LABEL);
+                _setupWindow.minSize = new Vector2(350, 520);
+                _setupWindow.maxSize = new Vector2(350, 580);
+                EditorApplication.projectChanged += FullRefresh;
+            }
+
         }
 
 
@@ -280,6 +270,7 @@ namespace MagicLeapSetupTool.Editor
         {
             if (!MagicLeapSetup.CheckingAvailability)
             {
+                _magicLeapSetupData.RefreshVariables();
                 MagicLeapSetup.CheckSDKAvailability();
             }
         }

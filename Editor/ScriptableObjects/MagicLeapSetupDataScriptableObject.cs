@@ -19,6 +19,8 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 		private const string TEST_FOR_PACKAGE_MANAGER_ML_SCRIPT_UPDATED = "com.magicleap.unitysdk"; // Test this assembly. The name switched after the initial release 
 		private const string TEST_FOR_ML_SCRIPT = "UnityEngine.XR.MagicLeap.MLInput";               // Test this assembly. If it does not exist. The package is not imported. 
         private const string TEST_FOR_PACKAGE_MANAGER_ML_SCRIPT = "com.magicleap.unitysdk";         // Test this assembly. If it does not exist. The package is not imported. 
+		private const string MAGIC_LEAP_PACKAGE_ID = "com.magicleap.unitysdk";                                                // Used to check if the build platform is installed
+		private const string LUMIN_PACKAGE_ID = "com.unity.xr.magicleap";                                                     // Used to check if the build platform is installed
 		private static string _certificatePath = "";
 
 
@@ -36,7 +38,9 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 #endif
 			}
 		}
-        public  bool CheckingAvailability;
+
+		private int _currentImportSdkStep;
+		public  bool CheckingAvailability;
         public  bool HasCompatibleMagicLeapSdk;
         public  bool HasMagicLeapSdkInstalled;
         public  bool HasCorrectGraphicConfiguration;
@@ -54,7 +58,19 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 		public bool EmbeddedPackage;
         public  bool ManifestIsUpdated { private set; get; }
 		public bool HasRootSDKPathInEditorPrefs;
+		private static int _busyCounter;
 
+		public static int BusyCounter
+		{
+			get => _busyCounter;
+			set
+			{
+
+				_busyCounter = Mathf.Clamp(value, 0, 100);
+			}
+		}
+
+		public bool Busy => BusyCounter > 0;
 		public  string CertificatePath
         {
             get
@@ -80,6 +96,19 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
             }
         }
 
+		public int CurrentImportSdkStep
+		{
+			get => _currentImportSdkStep;
+			set
+			{
+				if (_currentImportSdkStep != value)
+				{
+					_currentImportSdkStep = Mathf.Clamp(value, 0, 2);
+					EditorUtility.SetDirty(this);
+					AssetDatabase.SaveAssets();
+				}
+			}
+		}
 
 		public void SetSdkRoot(string path)
 		{
@@ -121,26 +150,28 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 				}
 				else
 				{
-					var packagePath = Path.GetFullPath(Path.Combine(Application.dataPath, "../Packages/")).Replace('\\','/');
-
-					var exists = DefineSymbolsUtility.DirectoryPathExistsWildCard(packagePath, "com.magicleap.unitysdk");
-				
-				
 					ImportMagicLeapPackageFromPackageManager = true;
-					if (!exists && !Loading)
+					var packageCachePath = Path.GetFullPath(Path.Combine(Application.dataPath, "../Library/PackageCache")).Replace('\\','/');
+					var exists = DefineSymbolsUtility.DirectoryPathExistsWildCard(packageCachePath, "com.magicleap.unitysdk");
+					if (exists)
 					{
-					
-						//PackageUtility.EmbedPackage("com.magicleap.unitysdk",(success)=>
-						//													 {
-						//														 Debug.Log("Checking...: "+ success); 
-						//														EmbeddedPackage = success;
-						//													 });
+						CurrentImportSdkStep = 1;
+						var packagePath = Path.GetFullPath(Path.Combine(Application.dataPath, "../Packages/")).Replace('\\','/');
+						var embedded = DefineSymbolsUtility.DirectoryPathExistsWildCard(packagePath, "com.magicleap.unitysdk");
+						if (embedded)
+						{
+							CurrentImportSdkStep = 2;
+						}
 					}
+					else
+					{
+						CurrentImportSdkStep = 0;
+					}
+
 				}
 			}
 
 			EditorUtility.SetDirty(this);
-			AssetDatabase.Refresh();
 		}
 
 		private bool CorrectGraphicsConfiguration()
@@ -207,7 +238,6 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 												   if (DefineSymbolsUtility.ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL))
 												   {
 													   DefineSymbolsUtility.RemoveDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
-													   Debug.Log("REMOVE!");
 												   }
 											   }
 											   else
@@ -219,6 +249,58 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 											   }
 
 										   };
+
+		}
+
+		public void CheckSDKAvailability()
+		{
+			UpdateDefineSymbols();
+			RefreshVariables();
+
+			if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin)
+			{
+				CheckingAvailability = true;
+				CheckForLuminSdkPackage();
+				CheckForMagicLeapSdkPackage();
+
+			}
+		}
+		public  void CheckForLuminSdkPackage()
+		{
+			BusyCounter++;
+			PackageUtility.HasPackageInstalled(LUMIN_PACKAGE_ID, OnCheckForLuminRequestFinished);
+
+
+
+			void OnCheckForLuminRequestFinished(bool success, bool hasLumin)
+			{
+				if (success && hasLumin)
+				{
+					RefreshVariables();
+				}
+				else
+				{
+					MagicLeapSetupAutoRun.Stop();
+				}
+
+				BusyCounter--;
+				CheckingAvailability = false;
+			}
+		}
+		public void CheckForMagicLeapSdkPackage()
+		{
+			BusyCounter++;
+			PackageUtility.HasPackageInstalled(MAGIC_LEAP_PACKAGE_ID, onCheckForMagicLeapPackageInPackageManager);
+
+
+
+			void onCheckForMagicLeapPackageInPackageManager(bool success, bool hasPackage)
+			{
+
+				RefreshVariables();
+				BusyCounter--;
+				HasMagicLeapSdkInPackageManager = hasPackage;
+			}
 
 		}
 }
