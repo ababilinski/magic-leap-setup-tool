@@ -203,6 +203,10 @@ namespace MagicLeapSetupTool.Editor
             }
         }
 
+        public static void RepaintUI()
+        {
+            _setupWindow.Repaint();
+        }
         private void OnInspectorUpdate()
         {
         
