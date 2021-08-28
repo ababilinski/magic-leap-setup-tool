@@ -170,6 +170,15 @@ namespace MagicLeapSetupTool.Editor
 
         public static void RepaintUI()
         {
+            if (_setupWindow == null)
+            {
+                _setupWindow = GetWindow<MagicLeapSetupWindow>(false, WINDOW_TITLE_LABEL);
+                _setupWindow.minSize = new Vector2(350, 520);
+                _setupWindow.maxSize = new Vector2(350, 580);
+                EditorApplication.projectChanged += FullRefresh;
+               
+            }
+
             _setupWindow.Repaint();
         }
         private void OnInspectorUpdate()

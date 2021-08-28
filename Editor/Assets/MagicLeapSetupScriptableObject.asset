@@ -16,9 +16,9 @@ MonoBehaviour:
   CorrectBuildTarget: 1
   CheckingAvailability: 0
   HasCompatibleMagicLeapSdk: 1
-  HasMagicLeapSdkInstalled: 1
+  HasMagicLeapSdkInstalled: 0
   HasCorrectGraphicConfiguration: 0
-  LuminSettingEnabled: 1
+  LuminSettingEnabled: 0
   GetSdkFromPackageManager: 1
   ValidCertificatePath: 1
   ImportMagicLeapPackageFromPackageManager: 1
@@ -27,6 +27,6 @@ MonoBehaviour:
   CorrectColorSpace: 1
   PreviousCertificatePath: C:/Users/ababi/OneDrive/Documents/MagicLeap-Certificates/privatekey/magic-cube.cert
   HasRootSDKPath: 1
-  HasMagicLeapSdkInPackageManager: 1
+  HasMagicLeapSdkInPackageManager: 0
   EmbeddedPackage: 0
   HasRootSDKPathInEditorPrefs: 1

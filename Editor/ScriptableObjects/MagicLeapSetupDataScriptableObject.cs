@@ -139,7 +139,7 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 			ManifestIsUpdated = false;
 	#endif
 			CorrectColorSpace = PlayerSettings.colorSpace == ColorSpace.Linear;
-			
+			CheckSdkPackageState();
 
 			EditorUtility.SetDirty(this);
 		}
@@ -158,10 +158,8 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 				else
 				{
 					ImportMagicLeapPackageFromPackageManager = true;
-					var packagePath = Path.GetFullPath(Path.Combine(Application.dataPath, "../Packages/"))
-										  .Replace('\\', '/');
-					var embedded =
-						DefineSymbolsUtility.DirectoryPathExistsWildCard(packagePath, "com.magicleap.unitysdk");
+					var packagePath = Path.GetFullPath(Path.Combine(Application.dataPath, "../Packages/")).Replace('\\', '/');
+					var embedded =DefineSymbolsUtility.DirectoryPathExistsWildCard(packagePath, "com.magicleap.unitysdk");
 					if (embedded)
 					{
 						CurrentImportSdkStep = 2;
@@ -176,17 +174,7 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 
 						void OnCheckedPackagedList(bool exists)
 						{
-							if (exists)
-							{
-								Debug.Log("has package: " + Busy);
-								CurrentImportSdkStep = 1;
-
-							}
-							else
-							{
-								Debug.Log("No package");
-								CurrentImportSdkStep = 0;
-							}
+							CurrentImportSdkStep = exists ? 1 : 0;
 
 							BusyCounter--;
 						}
@@ -254,7 +242,7 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 		}
 		public  void UpdateDefineSymbols()
 		{
-			var sdkPath = EditorPrefs.GetString("LuminSDKRoot");
+			//var sdkPath = EditorPrefs.GetString("LuminSDKRoot");
 
 
 			EditorApplication.delayCall += () =>
@@ -268,7 +256,7 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 											   }
 											   else
 											   {
-												   if (!string.IsNullOrWhiteSpace(sdkPath) && Directory.Exists(sdkPath) && !DefineSymbolsUtility.ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL))
+												   if (/*!string.IsNullOrWhiteSpace(sdkPath) && Directory.Exists(sdkPath) && */!DefineSymbolsUtility.ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL))
 												   {
 													   DefineSymbolsUtility.AddDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
 												   }

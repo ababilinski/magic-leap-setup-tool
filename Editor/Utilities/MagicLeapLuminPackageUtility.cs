@@ -178,6 +178,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
 
         public static void EnableLuminXRPlugin()
         {
+            Debug.Log("Enable");
 #if MAGICLEAP
 
 

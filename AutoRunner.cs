@@ -26,6 +26,8 @@ namespace MagicLeapSetupTool.Editor
 
 		private static void OnEditorApplicationUpdate()
 		{
+			MagicLeapSetupDataScriptableObject.Instance.UpdateDefineSymbols();
+
 			var autoShow = EditorPrefs.GetBool(AutoShowEditorPrefKey, true);
 			if (!MagicLeapSetup.HasRootSDKPathInEditorPrefs
 			 || !MagicLeapSetup.HasLuminInstalled
