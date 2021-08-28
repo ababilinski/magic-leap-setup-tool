@@ -15,8 +15,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
 {
     public static class PackageUtility
     {
-        private static readonly List<RemoveRequest> _removeRequests = new List<RemoveRequest>();
-        private static readonly List<Action<bool>> _removeRequestFinished = new List<Action<bool>>();
+
 
         private static bool _hasListRequest;
         private static ListRequest _listInstalledPackagesRequest;
@@ -166,6 +165,63 @@ namespace MagicLeapSetupTool.Editor.Utilities
             }
         }
 
+        public static void HasPackage(string packageName, Action<bool> success)
+        {
+                        ListRequest listRequest = Client.List(true);
+                        EditorApplication.update += CheckForAddedPackageProgress;
+
+                       void CheckForAddedPackageProgress()
+                       {
+                           bool packageFound = false;
+                            if (listRequest.IsCompleted)
+                            {
+                                if (listRequest.Status == StatusCode.Success)
+                                {
+                                    foreach (var package in listRequest.Result)
+                                    {
+                                        // Only retrieve packages that are currently installed in the
+                                        // project (and are neither Built-In nor already Embedded)
+                                        if (package.isDirectDependency
+                                         && package.source
+                                         != PackageSource.BuiltIn
+                                         && package.source
+                                         != PackageSource.Embedded)
+                                        {
+                                            if (package.name.Equals(packageName))
+                                            {
+                                                packageFound = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    if (packageFound)
+                                    {
+
+                                        success.Invoke(true);
+
+
+                                     
+                                    }
+                                    else
+                                    {
+                                       
+                                        success.Invoke(false);
+                                    }
+
+                            
+                                }
+                                else
+                                {
+                                    Debug.LogError(listRequest.Error.message);
+                                    success.Invoke(false);
+                                }
+
+                                EditorApplication.update -= CheckForAddedPackageProgress;
+                            }
+                        }
+        }
+
         public static void EmbedPackage(string packageName, Action<bool> success)
         {
              
@@ -291,8 +347,6 @@ namespace MagicLeapSetupTool.Editor.Utilities
 
 
 
-            _removeRequestFinished.Add(success);
-            _removeRequests.Add(Client.Remove(name));
         }
 
         /// <summary>

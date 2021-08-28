@@ -13,20 +13,20 @@ MonoBehaviour:
   m_Name: MagicLeapSetupScriptableObject
   m_EditorClassIdentifier: 
   Loading: 0
-  CorrectBuildTarget: 0
+  CorrectBuildTarget: 1
   CheckingAvailability: 0
-  HasCompatibleMagicLeapSdk: 0
-  HasMagicLeapSdkInstalled: 0
+  HasCompatibleMagicLeapSdk: 1
+  HasMagicLeapSdkInstalled: 1
   HasCorrectGraphicConfiguration: 0
-  LuminSettingEnabled: 0
-  GetSdkFromPackageManager: 0
-  ValidCertificatePath: 0
-  ImportMagicLeapPackageFromPackageManager: 0
+  LuminSettingEnabled: 1
+  GetSdkFromPackageManager: 1
+  ValidCertificatePath: 1
+  ImportMagicLeapPackageFromPackageManager: 1
   HasIncompatibleSDKAssetPackage: 0
-  SdkApiLevel: 0
-  CorrectColorSpace: 0
-  PreviousCertificatePath: 
-  HasRootSDKPath: 0
-  HasMagicLeapSdkInPackageManager: 0
+  SdkApiLevel: 10
+  CorrectColorSpace: 1
+  PreviousCertificatePath: C:/Users/ababi/OneDrive/Documents/MagicLeap-Certificates/privatekey/magic-cube.cert
+  HasRootSDKPath: 1
+  HasMagicLeapSdkInPackageManager: 1
   EmbeddedPackage: 0
-  HasRootSDKPathInEditorPrefs: 0
+  HasRootSDKPathInEditorPrefs: 1

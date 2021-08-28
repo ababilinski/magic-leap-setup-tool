@@ -139,39 +139,65 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 			ManifestIsUpdated = false;
 	#endif
 			CorrectColorSpace = PlayerSettings.colorSpace == ColorSpace.Linear;
+			
+
+			EditorUtility.SetDirty(this);
+		}
+
+		private void CheckSdkPackageState()
+		{
 			var versionLabel = MagicLeapLuminPackageUtility.GetSdkVersion();
 			if (Version.TryParse(versionLabel, out var currentVersion))
 			{
-				
+
 				if (currentVersion < new Version(0, 26, 0))
 				{
-					
+
 					ImportMagicLeapPackageFromPackageManager = false;
 				}
 				else
 				{
 					ImportMagicLeapPackageFromPackageManager = true;
-					var packageCachePath = Path.GetFullPath(Path.Combine(Application.dataPath, "../Library/PackageCache")).Replace('\\','/');
-					var exists = DefineSymbolsUtility.DirectoryPathExistsWildCard(packageCachePath, "com.magicleap.unitysdk");
-					if (exists)
+					var packagePath = Path.GetFullPath(Path.Combine(Application.dataPath, "../Packages/"))
+										  .Replace('\\', '/');
+					var embedded =
+						DefineSymbolsUtility.DirectoryPathExistsWildCard(packagePath, "com.magicleap.unitysdk");
+					if (embedded)
 					{
-						CurrentImportSdkStep = 1;
-						var packagePath = Path.GetFullPath(Path.Combine(Application.dataPath, "../Packages/")).Replace('\\','/');
-						var embedded = DefineSymbolsUtility.DirectoryPathExistsWildCard(packagePath, "com.magicleap.unitysdk");
-						if (embedded)
-						{
-							CurrentImportSdkStep = 2;
-						}
+						CurrentImportSdkStep = 2;
 					}
 					else
 					{
+						BusyCounter++;
 						CurrentImportSdkStep = 0;
+						PackageUtility.HasPackage("com.magicleap.unitysdk", OnCheckedPackagedList);
+
+
+
+						void OnCheckedPackagedList(bool exists)
+						{
+							if (exists)
+							{
+								Debug.Log("has package: " + Busy);
+								CurrentImportSdkStep = 1;
+
+							}
+							else
+							{
+								Debug.Log("No package");
+								CurrentImportSdkStep = 0;
+							}
+
+							BusyCounter--;
+						}
+
 					}
+
+
+
 
 				}
 			}
-
-			EditorUtility.SetDirty(this);
 		}
 
 		private bool CorrectGraphicsConfiguration()

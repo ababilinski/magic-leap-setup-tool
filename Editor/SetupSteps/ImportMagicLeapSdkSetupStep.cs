@@ -50,7 +50,6 @@ namespace MagicLeapSetupTool.Editor.Setup
 		/// <inheritdoc />
 		public void Draw(MagicLeapSetupDataScriptableObject data)
 		{
-
 		 if (!data.HasCompatibleMagicLeapSdk)
 		 {
 			 if (CustomGuiContent.CustomButtons.DrawConditionButton(IMPORT_MAGIC_LEAP_SDK, data.HasCompatibleMagicLeapSdk, "....", "Incompatible", Styles.FixButtonStyle, conditionMissingColor: Color.red))
@@ -61,7 +60,8 @@ namespace MagicLeapSetupTool.Editor.Setup
 		 }
 		 else
 		 {
-			 if (data.CurrentImportSdkStep == 1 && !data.Loading && !data.Busy)
+			
+			 if (data.CurrentImportSdkStep == 1 && !data.Loading && !data.Busy && !Busy)
 			 {
 				 EmbedPackage(data);
 			 }
@@ -83,8 +83,10 @@ namespace MagicLeapSetupTool.Editor.Setup
 			{
 				if (success)
 				{
+					data.RefreshVariables();
 					data.CheckSDKAvailability();
-
+					data.CurrentImportSdkStep = 2;
+					
 				}
 				else
 				{
@@ -115,8 +117,6 @@ namespace MagicLeapSetupTool.Editor.Setup
 				}
 			}
 		}
-
-	
 		private void UpgradePrompt(MagicLeapSetupDataScriptableObject data)
 		{
 			var usePreviousCertificateOption =

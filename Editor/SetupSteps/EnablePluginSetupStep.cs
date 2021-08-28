@@ -18,11 +18,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 		public static int BusyCounter
 		{
 			get => _busyCounter;
-			set
-			{
-
-				_busyCounter = Mathf.Clamp(value, 0, 100);
-			}
+			set => _busyCounter = Mathf.Clamp(value, 0, 100);
 		}
 
 		public bool Busy => BusyCounter > 0;
