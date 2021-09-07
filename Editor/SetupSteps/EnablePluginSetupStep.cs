@@ -24,20 +24,23 @@ namespace MagicLeapSetupTool.Editor.Setup
 		public bool Busy => BusyCounter > 0;
 
 		/// <inheritdoc />
-		public void Draw(MagicLeapSetupDataScriptableObject data)
+		public bool Draw(MagicLeapSetupDataScriptableObject data)
 		{
 			GUI.enabled = data.HasRootSDKPath && data.CorrectBuildTarget && data.HasLuminInstalled && !data.Loading;
 			 if (CustomGuiContent.CustomButtons.DrawConditionButton(ENABLE_PLUGIN_SETTINGS_LABEL, data.LuminSettingEnabled, CONDITION_MET_LABEL, ENABLE_PLUGIN_LABEL, Styles.FixButtonStyle))
 			 {
 				 Execute(data);
-				 MagicLeapSetupWindow.RepaintUI();
-			 }
+				return true;
+			}
+			return false;
 		}
 
 		/// <inheritdoc />
 		public void Execute(MagicLeapSetupDataScriptableObject data)
 		{
-
+			if(data.LuminSettingEnabled)
+			return;
+			
 			if (!data.HasLuminInstalled)
 			{
 				Debug.LogWarning(ENABLE_PLUGIN_FAILED_PLUGIN_NOT_INSTALLED_MESSAGE);

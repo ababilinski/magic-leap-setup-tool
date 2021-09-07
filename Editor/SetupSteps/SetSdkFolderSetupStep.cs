@@ -23,7 +23,7 @@ namespace MagicLeapSetupTool.Editor.Setup
         private const string SET_MAGIC_LEAP_DIR_MESSAGE = "Updated Magic Leap SDK path to [{0}].";  //[0] folder path
     #endregion
 		/// <inheritdoc />
-		public void Draw(MagicLeapSetupDataScriptableObject data)
+		public bool Draw(MagicLeapSetupDataScriptableObject data)
 		{
 
 			if (CustomGuiContent.CustomButtons.DrawConditionButton(new GUIContent(LOCATE_SDK_FOLDER_LABEL),
@@ -34,8 +34,10 @@ namespace MagicLeapSetupTool.Editor.Setup
 																   Styles.FixButtonStyle, false))
 			{
 				Execute(data);
-				MagicLeapSetupWindow.RepaintUI();
+				return true;
 			}
+
+			return false;
 		}
 
 		/// <inheritdoc />

@@ -48,15 +48,17 @@ namespace MagicLeapSetupTool.Editor.Setup
 
 		public bool Busy => BusyCounter > 0;
 		/// <inheritdoc />
-		public void Draw(MagicLeapSetupDataScriptableObject data)
+		public bool Draw(MagicLeapSetupDataScriptableObject data)
 		{
 		 if (!data.HasCompatibleMagicLeapSdk)
 		 {
 			 if (CustomGuiContent.CustomButtons.DrawConditionButton(IMPORT_MAGIC_LEAP_SDK, data.HasCompatibleMagicLeapSdk, "....", "Incompatible", Styles.FixButtonStyle, conditionMissingColor: Color.red))
 			 {
 				 Execute(data);
-				 MagicLeapSetupWindow.RepaintUI();
-			 }
+				return true;
+			}
+
+			return false;
 		 }
 		 else
 		 {
@@ -68,8 +70,10 @@ namespace MagicLeapSetupTool.Editor.Setup
 			 if (CustomGuiContent.CustomButtons.DrawConditionButton(IMPORT_MAGIC_LEAP_SDK, data.HasMagicLeapSdkInstalled, CONDITION_MET_LABEL, IMPORT_MAGIC_LEAP_SDK_BUTTON, Styles.FixButtonStyle))
 			 {
 				 Execute(data);
-				 MagicLeapSetupWindow.RepaintUI();
-			 }
+				return true;
+			}
+
+			return false;
 		 }
 		}
 
@@ -132,6 +136,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 				case 0: //Remove
 					if (data.HasIncompatibleSDKAssetPackage)
 					{
+						data.IsRestarting = true;
 						UnityProjectSettingsUtility.DeleteFolder(Path.Combine(Application.dataPath, "MagicLeap"), null,
 																 MagicLeapSetupWindow._setupWindow,
 																 $"{Application.dataPath}-DeletedFoldersReset");

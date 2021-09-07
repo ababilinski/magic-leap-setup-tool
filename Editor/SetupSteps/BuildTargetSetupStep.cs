@@ -11,7 +11,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 		private const string CONDITION_MET_LABEL = "Done";
 		private const string BUILD_SETTING_LABEL = "Set build target to Lumin";
 		/// <inheritdoc />
-		public void Draw(MagicLeapSetupDataScriptableObject data)
+		public bool Draw(MagicLeapSetupDataScriptableObject data)
 		{
 			
 			GUI.enabled = data.HasRootSDKPath && !data.Loading;
@@ -21,13 +21,16 @@ namespace MagicLeapSetupTool.Editor.Setup
 																   FIX_SETTING_BUTTON_LABEL, Styles.FixButtonStyle))
 			{
 				Execute(data);
-				MagicLeapSetupWindow.RepaintUI();
+				return true;
 			}
+			return false;
 		}
 
 		/// <inheritdoc />
 		public void Execute(MagicLeapSetupDataScriptableObject data)
-		{
+		{	
+			if(data.CorrectBuildTarget)
+			return;
 			EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Lumin, BuildTarget.Lumin);
 			data.CorrectBuildTarget = true;
 		}

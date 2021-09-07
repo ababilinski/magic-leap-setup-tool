@@ -16,14 +16,16 @@ namespace MagicLeapSetupTool.Editor.Setup
 		private const string CERTIFICATE_EXTENSTION = "cert"; //extension to look for while browsing
 		internal const string Get_CERTIFICATE_URL = "https://developer.magicleap.com/en-us/learn/guides/developer-certificates";
 		/// <inheritdoc />
-		public void Draw(MagicLeapSetupDataScriptableObject data)
+		public bool Draw(MagicLeapSetupDataScriptableObject data)
 		{
 		 if (CustomGuiContent.CustomButtons.DrawConditionButton(SET_CERTIFICATE_PATH_LABEL, data.ValidCertificatePath,
 		 new GUIContent(CONDITION_MET_CHANGE_LABEL, data.CertificatePath), SET_CERTIFICATE_PATH_BUTTON_LABEL, Styles.FixButtonStyle, SET_CERTIFICATE_HELP_TEXT, Get_CERTIFICATE_URL, false))
 		 {
 			 Execute(data);
-			 MagicLeapSetupWindow.RepaintUI();
-		 }
+			return true;
+		}
+
+		return false;
 		}
 
 		/// <inheritdoc />

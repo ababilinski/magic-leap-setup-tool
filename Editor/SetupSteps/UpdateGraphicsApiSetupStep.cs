@@ -26,20 +26,23 @@ namespace MagicLeapSetupTool.Editor.Setup
 
 		public bool Busy => BusyCounter > 0;
 		/// <inheritdoc />
-		public void Draw(MagicLeapSetupDataScriptableObject data)
+		public bool Draw(MagicLeapSetupDataScriptableObject data)
 		{ 
 		
 			if (CustomGuiContent.CustomButtons.DrawConditionButton(SET_CORRECT_GRAPHICS_API_LABEL, data.HasCorrectGraphicConfiguration, CONDITION_MET_LABEL, SET_CORRECT_GRAPHICS_BUTTON_LABEL, Styles.FixButtonStyle))
 			{
 				Execute(data);
-				MagicLeapSetupWindow.RepaintUI();
+				return true;
 			}
+
+			return false;
 		}
 
 		/// <inheritdoc />
 		public void Execute(MagicLeapSetupDataScriptableObject data)
 		{
-			
+			if(data.HasCorrectGraphicConfiguration)
+			return;
 			UpdateGraphicsSettings(data);
 
 		}
@@ -74,6 +77,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 			 || standaloneOSXResetRequired
 			 || standaloneLinuxResetRequired)
 			{
+				
 				UnityProjectSettingsUtility.UpdateGraphicsApi(true);
 			}
 			else

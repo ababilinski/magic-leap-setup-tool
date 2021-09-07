@@ -26,16 +26,17 @@ namespace MagicLeapSetupTool.Editor.Setup
 
 		public bool Busy => BusyCounter > 0;
 		/// <inheritdoc />
-		public void Draw(MagicLeapSetupDataScriptableObject data)
+		public bool Draw(MagicLeapSetupDataScriptableObject data)
 		{
 			//Makes sure the user changes to the Lumin Build Target before being able to set the other options
 			GUI.enabled = data.HasRootSDKPath && data.CorrectBuildTarget && !data.Loading;
 			 if (CustomGuiContent.CustomButtons.DrawConditionButton(INSTALL_PLUGIN_LABEL, data.HasLuminInstalled, CONDITION_MET_LABEL, INSTALL_PLUGIN_BUTTON_LABEL, Styles.FixButtonStyle))
 			 {
 				 Execute(data);
-				 MagicLeapSetupWindow.RepaintUI();
+				return true;
+			}
 
-			 }
+			return false;
 		}
 
 		/// <inheritdoc />

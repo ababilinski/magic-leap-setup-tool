@@ -9,8 +9,6 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 {
    
 
-    [CreateAssetMenu(fileName = "MagicLeapSetupScriptableObject", menuName = "ScriptableObjects/MagicLeapSetupScriptableObject")]
-    
     public class MagicLeapSetupDataScriptableObject : SingletonScriptableObject<MagicLeapSetupDataScriptableObject>
 	{
 		private const string LUMIN_SDK_PATH_KEY = "LuminSDKRoot"; //Editor Pref key to set/get the Lumin SDK
@@ -39,6 +37,7 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 			}
 		}
 
+		public bool IsRestarting;
 		private int _currentImportSdkStep;
 		public  bool CheckingAvailability;
         public  bool HasCompatibleMagicLeapSdk;

@@ -11,21 +11,27 @@ namespace MagicLeapSetupTool.Editor.Setup
 		private const string CONDITION_MET_LABEL = "Done";
 		private const string FIX_SETTING_BUTTON_LABEL = "Fix Setting";
 		/// <inheritdoc />
-		public void Draw(MagicLeapSetupDataScriptableObject data)
+		public bool Draw(MagicLeapSetupDataScriptableObject data)
 		{
-			if (CustomGuiContent.CustomButtons.DrawConditionButton(COLOR_SPACE_LABEL, PlayerSettings.colorSpace == ColorSpace.Linear, CONDITION_MET_LABEL, FIX_SETTING_BUTTON_LABEL, Styles.FixButtonStyle))
+			data.CorrectColorSpace = PlayerSettings.colorSpace == ColorSpace.Linear;
+			if (CustomGuiContent.CustomButtons.DrawConditionButton(COLOR_SPACE_LABEL, data.CorrectColorSpace, CONDITION_MET_LABEL, FIX_SETTING_BUTTON_LABEL, Styles.FixButtonStyle))
 			{
 				Execute(data);
-				MagicLeapSetupWindow.RepaintUI();
-
+				return true;
 			}
+
+			return false;
 		}
 
 		/// <inheritdoc />
 		public void Execute(MagicLeapSetupDataScriptableObject data)
 		{
+			if(data.CorrectColorSpace)
+			return;
+			
 			PlayerSettings.colorSpace = ColorSpace.Linear;
 			data.CorrectColorSpace = PlayerSettings.colorSpace == ColorSpace.Linear;
+			
 			Debug.Log($"Set Color Space to: [{PlayerSettings.colorSpace}]");
 		}
 	}

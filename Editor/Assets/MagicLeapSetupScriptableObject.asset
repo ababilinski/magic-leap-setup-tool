@@ -14,18 +14,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Loading: 0
   CorrectBuildTarget: 1
+  IsRestarting: 0
   CheckingAvailability: 0
   HasCompatibleMagicLeapSdk: 1
-  HasMagicLeapSdkInstalled: 0
+  HasMagicLeapSdkInstalled: 1
   HasCorrectGraphicConfiguration: 0
-  LuminSettingEnabled: 0
-  GetSdkFromPackageManager: 1
+  LuminSettingEnabled: 1
+  GetSdkFromPackageManager: 0
   ValidCertificatePath: 1
-  ImportMagicLeapPackageFromPackageManager: 1
+  ImportMagicLeapPackageFromPackageManager: 0
   HasIncompatibleSDKAssetPackage: 0
-  SdkApiLevel: 10
+  SdkApiLevel: 8
   CorrectColorSpace: 1
-  PreviousCertificatePath: C:/Users/ababi/OneDrive/Documents/MagicLeap-Certificates/privatekey/magic-cube.cert
+  PreviousCertificatePath: C:/Users/ababi/OneDrive/Documents/MagicLeap-Certificates/developer-certificate/magic-leap-adrian.cert
   HasRootSDKPath: 1
   HasMagicLeapSdkInPackageManager: 0
   EmbeddedPackage: 0

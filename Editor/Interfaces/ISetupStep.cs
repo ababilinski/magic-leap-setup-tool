@@ -4,9 +4,9 @@ namespace MagicLeapSetupTool.Editor.Interfaces
 {
 	public interface ISetupStep
 	{
-		void Draw(MagicLeapSetupDataScriptableObject data);
+		bool Draw(MagicLeapSetupDataScriptableObject data);
 
-		
+
 		void Execute(MagicLeapSetupDataScriptableObject data);
 	}
 }

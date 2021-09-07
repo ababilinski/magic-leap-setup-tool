@@ -6,6 +6,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MagicLeapSetupTool.Editor.ScriptableObjects;
+using MagicLeapSetupTool.Editor.Setup;
 using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -59,6 +61,17 @@ namespace MagicLeapSetupTool.Editor
                                                    && MagicLeapSetup.HasCompatibleMagicLeapSdk
                                                    && EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin;
 
+        private static MagicLeapSetupDataScriptableObject _magicLeapSetupData;
+        private static SetSdkFolderSetupStep _setSdkFolderSetupStep = new SetSdkFolderSetupStep();
+        private static BuildTargetSetupStep _buildTargetSetupStep = new BuildTargetSetupStep();
+        private static InstallPluginSetupStep _installPluginSetupStep = new InstallPluginSetupStep();
+        private static EnablePluginSetupStep _enablePluginSetupStep = new EnablePluginSetupStep();
+        private static UpdateManifestSetupStep _updateManifestSetupStep = new UpdateManifestSetupStep();
+        private static SetCertificateSetupStep _setCertificateSetupStep = new SetCertificateSetupStep();
+        private static ImportMagicLeapSdkSetupStep _importMagicLeapSdkSetupStep = new ImportMagicLeapSdkSetupStep();
+        private static ColorSpaceSetupStep _colorSpaceSetupStep = new ColorSpaceSetupStep();
+        private static UpdateGraphicsApiSetupStep _updateGraphicsApiSetupStep = new UpdateGraphicsApiSetupStep();
+
         internal static ApplyAllState CurrentApplyAllState
         {
             get => _currentApplyAllState;
@@ -72,15 +85,15 @@ namespace MagicLeapSetupTool.Editor
         public static void CheckLastAutoSetupState()
         {
            
-           //if(Enum.TryParse(EditorPrefs.GetString(MAGICLEAP_AUTO_SETUP_PREF),true, out ApplyAllState value))
-           //{
+           if(Enum.TryParse(EditorPrefs.GetString(MAGICLEAP_AUTO_SETUP_PREF),true, out ApplyAllState value))
+           {
         
-           //    CurrentApplyAllState = value;
-           //}
-           //else
-           //{
-           //    _currentApplyAllState = ApplyAllState.Done;
-           //}
+               CurrentApplyAllState = value;
+           }
+           else
+           {
+               _currentApplyAllState = ApplyAllState.Done;
+           }
          
         }
 
@@ -93,199 +106,187 @@ namespace MagicLeapSetupTool.Editor
      
         internal static void RunApplyAll()
         {
-            //if (!_allAutoStepsComplete)
-            //{
-            //    var dialogComplex = EditorUtility.DisplayDialogComplex(APPLY_ALL_PROMPT_TITLE, APPLY_ALL_PROMPT_MESSAGE,
-            //                                                           APPLY_ALL_PROMPT_OK, APPLY_ALL_PROMPT_CANCEL, APPLY_ALL_PROMPT_ALT);
+            _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
+            if (!_allAutoStepsComplete)
+            {
+                var dialogComplex = EditorUtility.DisplayDialogComplex(APPLY_ALL_PROMPT_TITLE, APPLY_ALL_PROMPT_MESSAGE,
+                                                                       APPLY_ALL_PROMPT_OK, APPLY_ALL_PROMPT_CANCEL, APPLY_ALL_PROMPT_ALT);
 
-            //    switch (dialogComplex)
-            //    {
-            //        case 0: //Continue
-            //            CurrentApplyAllState = ApplyAllState.SwitchBuildTarget;
-            //            break;
-            //        case 1: //Stop
-            //            CurrentApplyAllState = ApplyAllState.Done;
-            //            break;
-            //        case 2: //Go to documentation
-            //            Help.BrowseURL(MagicLeapSetupWindow.SETUP_ENVIRONMENT_URL);
-            //            CurrentApplyAllState = ApplyAllState.Done;
-            //            break;
-            //    }
+                switch (dialogComplex)
+                {
+                    case 0: //Continue
+                        CurrentApplyAllState = ApplyAllState.SwitchBuildTarget;
+                        break;
+                    case 1: //Stop
+                        CurrentApplyAllState = ApplyAllState.Done;
+                        break;
+                    case 2: //Go to documentation
+                        Help.BrowseURL(MagicLeapSetupWindow.SETUP_ENVIRONMENT_URL);
+                        CurrentApplyAllState = ApplyAllState.Done;
+                        break;
+                }
 
                
                
              
-            //}
-            //else if (!MagicLeapSetup.ValidCertificatePath)
-            //{
-            //    var dialogComplex = EditorUtility.DisplayDialogComplex(APPLY_ALL_PROMPT_TITLE, APPLY_ALL_PROMPT_MISSING_CERT_MESSAGE,
-            //                                                           APPLY_ALL_PROMPT_MISSING_CERT_OK, APPLY_ALL_PROMPT_MISSING_CERT_CANCEL, APPLY_ALL_PROMPT_ALT);
+            }
+            else if (!_magicLeapSetupData.ValidCertificatePath)
+            {
+                var dialogComplex = EditorUtility.DisplayDialogComplex(APPLY_ALL_PROMPT_TITLE, APPLY_ALL_PROMPT_MISSING_CERT_MESSAGE,
+                                                                       APPLY_ALL_PROMPT_MISSING_CERT_OK, APPLY_ALL_PROMPT_MISSING_CERT_CANCEL, APPLY_ALL_PROMPT_ALT);
 
-            //    switch (dialogComplex)
-            //    {
-            //        case 0: //Continue
-            //            MagicLeapSetup.BrowseForCertificate();
-            //            break;
-            //        case 1: //Stop
-            //            CurrentApplyAllState = ApplyAllState.Done;
-            //            break;
-            //        case 2: //Go to documentation
-            //            Help.BrowseURL(MagicLeapSetupWindow.SETUP_ENVIRONMENT_URL);
-            //            CurrentApplyAllState = ApplyAllState.Done;
-            //            break;
-            //    }
-            //}
-            //else if (MagicLeapSetup.ValidCertificatePath)
-            //{
-            //    EditorUtility.DisplayDialog(APPLY_ALL_PROMPT_TITLE, APPLY_ALL_PROMPT_NOTHING_TO_DO_MESSAGE,
-            //                                APPLY_ALL_PROMPT_NOTHING_TO_DO_OK);
-            //}
+                switch (dialogComplex)
+                {
+                    case 0: //Continue
+                        _setCertificateSetupStep.Execute(_magicLeapSetupData);
+                        MagicLeapSetup.BrowseForCertificate();
+                        break;
+                    case 1: //Stop
+                        CurrentApplyAllState = ApplyAllState.Done;
+                        break;
+                    case 2: //Go to documentation
+                        Help.BrowseURL(MagicLeapSetupWindow.SETUP_ENVIRONMENT_URL);
+                        CurrentApplyAllState = ApplyAllState.Done;
+                        break;
+                }
+            }
+            else if (_magicLeapSetupData.ValidCertificatePath)
+            {
+                EditorUtility.DisplayDialog(APPLY_ALL_PROMPT_TITLE, APPLY_ALL_PROMPT_NOTHING_TO_DO_MESSAGE,
+                                            APPLY_ALL_PROMPT_NOTHING_TO_DO_OK);
+            }
         }
 
 
         internal static void Tick()
         {
           
-            //var _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || MagicLeapSetup.IsBusy || EditorApplication.isUpdating;
-            //if (CurrentApplyAllState != ApplyAllState.Done && !_loading)
-            //{
-            //    ApplyAll();
-            //}
+            var _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || MagicLeapSetup.IsBusy || EditorApplication.isUpdating;
+            if (CurrentApplyAllState != ApplyAllState.Done && !_loading)
+            {
+                ApplyAll();
+            }
 
            
         }
 
         private static void ApplyAll()
         {
-            //switch (CurrentApplyAllState)
-            //{
-            //    case ApplyAllState.SwitchBuildTarget:
-            //        if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Lumin)
-            //        {
-            //            Debug.Log(CHANGING_BUILD_PLATFORM_DEBUG);
-            //            EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Lumin, BuildTarget.Lumin);
-            //        }
+            if (_magicLeapSetupData == null)
+            {
+                _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
+                return;
+            }
+            switch (CurrentApplyAllState)
+            {
+                case ApplyAllState.SwitchBuildTarget:
+                    if (!_magicLeapSetupData.CorrectBuildTarget)
+                    {
+                        Debug.Log(CHANGING_BUILD_PLATFORM_DEBUG);
+                       _buildTargetSetupStep.Execute(_magicLeapSetupData);
+                    }
 
-            //        CurrentApplyAllState = ApplyAllState.InstallLumin;
-            //        break;
-            //    case ApplyAllState.InstallLumin:
-            //        if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin)
-            //        {
-            //            Debug.Log(!MagicLeapSetup.HasLuminInstalled);
-            //            if (!MagicLeapSetup.HasLuminInstalled)
-            //            {
-            //                Debug.Log(INSTALLING_LUMIN_SDK_DEBUG);
-            //                MagicLeapSetup.AddLuminSdkAndRefresh();
-            //            }
+                    CurrentApplyAllState = ApplyAllState.InstallLumin;
+                    break;
+                case ApplyAllState.InstallLumin:
+                    if (_magicLeapSetupData.CorrectBuildTarget)
+                    {
+                       
+                        if (!_magicLeapSetupData.HasLuminInstalled)
+                        {
+                            _installPluginSetupStep.Execute(_magicLeapSetupData);
+                        }
 
-            //            CurrentApplyAllState = ApplyAllState.EnableXrPackage;
-            //        }
+                        CurrentApplyAllState = ApplyAllState.EnableXrPackage;
+                    }
 
-            //        break;
-            //    case ApplyAllState.EnableXrPackage:
-            //        if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin && MagicLeapSetup.HasLuminInstalled)
-            //        {
-            //            if (!MagicLeapSetup.LuminSettingEnabled)
-            //            {
-            //                Debug.Log(ENABLING_LUMIN_SDK_DEBUG);
-            //                MagicLeapSetup.EnableLuminXRPluginAndRefresh();
-            //                UnityProjectSettingsUtility.OpenXrManagementWindow();
-            //                if (!MagicLeapSetup.CheckingAvailability)
-            //                {
-            //                    MagicLeapSetup.CheckSDKAvailability();
-            //                }
-            //            }
+                    break;
+                case ApplyAllState.EnableXrPackage:
+                    if (_magicLeapSetupData.CorrectBuildTarget && _magicLeapSetupData.HasLuminInstalled)
+                    {
+                        if (!_magicLeapSetupData.LuminSettingEnabled)
+                        {
+                            Debug.Log(ENABLING_LUMIN_SDK_DEBUG);
+                            _enablePluginSetupStep.Execute(_magicLeapSetupData);
+                            if (!_magicLeapSetupData.CheckingAvailability)
+                            {
+                                _magicLeapSetupData.CheckSDKAvailability();
+                            }
+                        }
 
-            //            CurrentApplyAllState = ApplyAllState.UpdateManifest;
-            //        }
+                        CurrentApplyAllState = ApplyAllState.UpdateManifest;
+                    }
 
-            //        break;
-            //    case ApplyAllState.UpdateManifest:
-            //        if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin && MagicLeapSetup.HasLuminInstalled && MagicLeapSetup.LuminSettingEnabled)
-            //        {
-            //            if (!MagicLeapSetup.ManifestIsUpdated)
-            //            {
-            //                Debug.Log(UPDATING_MANIFEST_DEBUG);
-            //                MagicLeapSetup.UpdateManifest();
-            //            }
+                    break;
+                case ApplyAllState.UpdateManifest:
+                    if (_magicLeapSetupData.CorrectBuildTarget && _magicLeapSetupData.HasLuminInstalled && _magicLeapSetupData.LuminSettingEnabled)
+                    {
+                        if (!_magicLeapSetupData.ManifestIsUpdated)
+                        {
+                            Debug.Log(UPDATING_MANIFEST_DEBUG);
+                            _updateManifestSetupStep.Execute(_magicLeapSetupData);
+                        }
 
-            //            CurrentApplyAllState = ApplyAllState.ChangeColorSpace;
-            //        }
+                        CurrentApplyAllState = ApplyAllState.ChangeColorSpace;
+                    }
 
-            //        break;
+                    break;
 
-            //    case ApplyAllState.ChangeColorSpace:
-            //        if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin && MagicLeapSetup.HasLuminInstalled && MagicLeapSetup.LuminSettingEnabled && MagicLeapSetup.ManifestIsUpdated)
-            //        {
-            //            if (PlayerSettings.colorSpace != ColorSpace.Linear)
-            //            {
-            //                Debug.Log(UPDATING_COLORSPACE_DEBUG);
-            //                PlayerSettings.colorSpace = ColorSpace.Linear;
-            //            }
+                case ApplyAllState.ChangeColorSpace:
+                    if (_magicLeapSetupData.CorrectBuildTarget && _magicLeapSetupData.HasLuminInstalled && _magicLeapSetupData.LuminSettingEnabled && _magicLeapSetupData.ManifestIsUpdated)
+                    {
+                        if (!_magicLeapSetupData.CorrectColorSpace)
+                        {
+                            Debug.Log(UPDATING_COLORSPACE_DEBUG);
+                           _colorSpaceSetupStep.Execute(_magicLeapSetupData);
+                        }
 
-            //            CurrentApplyAllState = ApplyAllState.ImportSdkUnityPackage;
-            //        }
+                        CurrentApplyAllState = ApplyAllState.ImportSdkUnityPackage;
+                    }
 
-            //        break;
+                    break;
 
-            //    case ApplyAllState.ImportSdkUnityPackage:
-            //        if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin && MagicLeapSetup.HasLuminInstalled && MagicLeapSetup.LuminSettingEnabled && MagicLeapSetup.ManifestIsUpdated)
-            //        {
-            //            if (!MagicLeapSetup.HasMagicLeapSdkInstalled)
-            //            {
-            //                if (MagicLeapSetup.HasCompatibleMagicLeapSdk)
-            //                {
-            //                    if (MagicLeapSetup.GetSdkFromPackageManager)
-            //                    {
-            //                        MagicLeapSetupWindow.ImportSdkFromUnityPackageManagerPackage();
-            //                    }
-            //                    else
-            //                    {
-            //                        MagicLeapSetupWindow.ImportSdkFromUnityAssetPackage();
-            //                    }
+                case ApplyAllState.ImportSdkUnityPackage:
+                    if (_magicLeapSetupData.CorrectBuildTarget && _magicLeapSetupData.HasLuminInstalled && _magicLeapSetupData.LuminSettingEnabled && _magicLeapSetupData.ManifestIsUpdated)
+                    {
+                        if (!_magicLeapSetupData.HasMagicLeapSdkInstalled)
+                        {
+                            if (_magicLeapSetupData.HasCompatibleMagicLeapSdk)
+                            {
+                               _importMagicLeapSdkSetupStep.Execute(_magicLeapSetupData);
 
-            //                    Debug.Log(IMPORTING_LUMIN_UNITYPACKAGE_DEBUG);
-            //                    CurrentApplyAllState = ApplyAllState.ChangeGraphicsApi;
-            //                }
-            //                else
-            //                {
-            //                    //TODO: Automate
-            //                    Debug.LogError("Magic Leap SDK Conflict. Cannot resolve automatically.");
-            //                    Stop();
-            //                }
-            //            }
-            //        }
+                                Debug.Log(IMPORTING_LUMIN_UNITYPACKAGE_DEBUG);
+                                CurrentApplyAllState = ApplyAllState.ChangeGraphicsApi;
+                            }
+                            else
+                            {
+                                //TODO: Automate
+                                Debug.LogError("Magic Leap SDK Conflict. Cannot resolve automatically.");
+                                Stop();
+                            }
+                        }
+                    }
 
-            //        break;
+                    break;
 
-            //    case ApplyAllState.ChangeGraphicsApi:
-            //        if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin && MagicLeapSetup.HasLuminInstalled && MagicLeapSetup.LuminSettingEnabled && MagicLeapSetup.ManifestIsUpdated && MagicLeapSetup.HasMagicLeapSdkInstalled && PlayerSettings.colorSpace == ColorSpace.Linear)
-            //        {
-            //            if (!MagicLeapSetup.HasCorrectGraphicConfiguration)
-            //            {
-            //                Debug.Log(CHANGING_GRAPHICS_API_DEBUG);
-            //                MagicLeapSetup.UpdatedGraphicSettings += OnGraphicsSettingsUpdated;
-            //                MagicLeapSetup.UpdateGraphicsSettings();
+                case ApplyAllState.ChangeGraphicsApi:
+                    if (_magicLeapSetupData.CorrectBuildTarget && _magicLeapSetupData.HasLuminInstalled && _magicLeapSetupData.LuminSettingEnabled && _magicLeapSetupData.ManifestIsUpdated && _magicLeapSetupData.HasMagicLeapSdkInstalled && _magicLeapSetupData.CorrectColorSpace)
+                    {
+                        if (!_magicLeapSetupData.HasCorrectGraphicConfiguration)
+                        {
+                            Debug.Log(CHANGING_GRAPHICS_API_DEBUG);
+                            _updateGraphicsApiSetupStep.Execute(_magicLeapSetupData);
+                        }
 
+                        CurrentApplyAllState = ApplyAllState.Done;
+                    }
 
-
-            //                void OnGraphicsSettingsUpdated(bool resetRequired)
-            //                {
-            //                    UnityProjectSettingsUtility.UpdateGraphicsApi(resetRequired);
-
-            //                    MagicLeapSetup.UpdatedGraphicSettings -= OnGraphicsSettingsUpdated;
-            //                }
-            //            }
-
-            //            CurrentApplyAllState = ApplyAllState.Done;
-            //        }
-
-            //        break;
-            //    case ApplyAllState.Done:
-            //        break;
-            //    default:
-            //        throw new ArgumentOutOfRangeException();
-            //}
+                    break;
+                case ApplyAllState.Done:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
     #region ENUMS
