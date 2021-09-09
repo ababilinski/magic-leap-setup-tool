@@ -87,7 +87,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 			{
 				if (success)
 				{
-					data.RefreshVariables();
+					//data.RefreshVariables();
 					data.CheckSDKAvailability();
 					data.CurrentImportSdkStep = 2;
 					

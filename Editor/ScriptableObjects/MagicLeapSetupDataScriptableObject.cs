@@ -118,19 +118,25 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 		}
 		public void RefreshVariables()
 		{
-		
+			if (Busy)
+			{
+				return;
+			}
+			BusyCounter++;
 			SdkRoot = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
 			HasRootSDKPath = !string.IsNullOrEmpty(SdkRoot) && Directory.Exists(SdkRoot);
 			CertificatePath = UnityProjectSettingsUtility.Lumin.GetInternalCertificatePath();
+		
 			PreviousCertificatePath = EditorPrefs.GetString(CERTIFICATE_PATH_KEY, "");
 			HasRootSDKPathInEditorPrefs = !string.IsNullOrEmpty(EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null));
 			HasCompatibleMagicLeapSdk = MagicLeapLuminPackageUtility.HasCompatibleMagicLeapSdk();
 			SdkApiLevel = MagicLeapLuminPackageUtility.GetSdkApiLevel();
 			GetSdkFromPackageManager = MagicLeapLuminPackageUtility.UseSdkFromPackageManager();
 			LuminSettingEnabled = MagicLeapLuminPackageUtility.IsLuminXREnabled();
+			//
 			ValidCertificatePath = !string.IsNullOrEmpty(CertificatePath) && File.Exists(CertificatePath);
 			HasIncompatibleSDKAssetPackage = MagicLeapLuminPackageUtility.HasIncompatibleUnityAssetPackage();
-			HasMagicLeapSdkInstalled = TypeUtility.FindTypeByPartialName(TEST_FOR_ML_SCRIPT) != null || TypeUtility.FindTypeByPartialName(TEST_FOR_PACKAGE_MANAGER_ML_SCRIPT) != null|| HasMagicLeapSdkInPackageManager;
+			HasMagicLeapSdkInstalled = TypeUtility.FindTypeByPartialName(TEST_FOR_ML_SCRIPT) != null ||  HasMagicLeapSdkInPackageManager;
 			HasCorrectGraphicConfiguration = CorrectGraphicsConfiguration();
 	#if MAGICLEAP
 			ManifestIsUpdated = MagicLeapLuminPackageUtility.MagicLeapManifest != null && MagicLeapLuminPackageUtility.MagicLeapManifest.minimumAPILevel == SdkApiLevel;
@@ -140,7 +146,7 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 			CorrectColorSpace = PlayerSettings.colorSpace == ColorSpace.Linear;
 			CheckSdkPackageState();
 
-			EditorUtility.SetDirty(this);
+			BusyCounter--;
 		}
 
 		private void CheckSdkPackageState()
@@ -289,7 +295,7 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 			{
 				if (success && hasLumin)
 				{
-					RefreshVariables();
+					//RefreshVariables();
 				}
 				else
 				{
@@ -310,7 +316,7 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 			void onCheckForMagicLeapPackageInPackageManager(bool success, bool hasPackage)
 			{
 
-				RefreshVariables();
+				//RefreshVariables();
 				BusyCounter--;
 				HasMagicLeapSdkInPackageManager = hasPackage;
 			}

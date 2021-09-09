@@ -104,7 +104,7 @@ namespace MagicLeapSetupTool.Editor
 
         private void OnEnable()
         {
-          
+           
             FullRefresh();
             _showing = true;
             EditorPrefs.SetBool(WindowClosedEditorPrefKey, false);
@@ -128,11 +128,9 @@ namespace MagicLeapSetupTool.Editor
 
         private void OnDestroy()
         {
-            if (!_magicLeapSetupData.IsRestarting)
-            {
-                EditorPrefs.SetBool(WindowClosedEditorPrefKey, true);
-            }
+            EditorPrefs.SetBool(WindowClosedEditorPrefKey, true);
 
+            EditorApplication.quitting -= OnQuit;
             _showing = false;
             FullRefresh();
             MagicLeapSetupAutoRun.Stop();
@@ -226,16 +224,18 @@ namespace MagicLeapSetupTool.Editor
             {
                 FoundPreviousCertificateLocationPrompt();
             }
+
+            Repaint();
         }
 
      
 
-        [MenuItem(WINDOW_PATH)]
-        public static void Open()
+      
+        private static void Open()
         {
-
-    
-            if (EditorPrefs.GetBool(MAGIC_LEAP_SETUP_CLOSED_WINDOW_KEY, false))
+        
+            EditorApplication.quitting += OnQuit;
+            if (EditorPrefs.GetBool(WindowClosedEditorPrefKey, false))
             {
                 return;
             }
@@ -258,7 +258,22 @@ namespace MagicLeapSetupTool.Editor
 
         }
 
+        public static void ForceOpen()
+        {
+            Open();
+        }
 
+        [MenuItem(WINDOW_PATH)]
+        public static void MenuOpen()
+        {
+            EditorPrefs.SetBool(WindowClosedEditorPrefKey, false);
+            Open();
+        }
+
+        private static void OnQuit()
+        {
+            EditorPrefs.SetBool(WindowClosedEditorPrefKey, false);
+        }
 
       
 
@@ -267,7 +282,7 @@ namespace MagicLeapSetupTool.Editor
             _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
             if (!_magicLeapSetupData.Loading && !_magicLeapSetupData.Busy)
             {
-                _magicLeapSetupData.RefreshVariables();
+               // _magicLeapSetupData.RefreshVariables();
                 _magicLeapSetupData.CheckSDKAvailability();
             }
           

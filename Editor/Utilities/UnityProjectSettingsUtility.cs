@@ -645,8 +645,10 @@ namespace MagicLeapSetupTool.Editor.Utilities
         {
             public static string GetInternalCertificatePath()
             {
-                var foundScript = TypeUtility.FindTypeByPartialName("UnityEditor.PlayerSettings+Lumin");
+            
+                Assembly coreModuleAssembly = Assembly.Load("UnityEditor.CoreModule");
 
+                var foundScript = coreModuleAssembly.GetType("UnityEditor.PlayerSettings+Lumin");
 
                 if (foundScript != null)
                 {
@@ -668,7 +670,9 @@ namespace MagicLeapSetupTool.Editor.Utilities
 
             public static void SetInternalCertificatePath(string certPath)
             {
-                var foundScript = TypeUtility.FindTypeByPartialName("UnityEditor.PlayerSettings+Lumin");
+                Assembly coreModuleAssembly = Assembly.Load("UnityEditor.CoreModule");
+
+                var foundScript = coreModuleAssembly.GetType("UnityEditor.PlayerSettings+Lumin");
 
 
                 if (foundScript != null)

@@ -8,6 +8,7 @@ namespace MagicLeapSetupTool.Editor
 	[InitializeOnLoad]
 	public static class AutoRunner
 	{
+		
 		internal const string MAGIC_LEAP_SETUP_POSTFIX_KEY = "MAGIC_LEAP_SETUP_KEY";
 		private static string AutoShowEditorPrefKey
 		{
@@ -21,11 +22,17 @@ namespace MagicLeapSetupTool.Editor
 		static AutoRunner()
 		{
 			EditorApplication.update += OnEditorApplicationUpdate;
-
+			
 		}
+		
 
 		private static void OnEditorApplicationUpdate()
 		{
+			if (!MagicLeapSetupDataScriptableObject.Instance)
+			{
+				return;
+			}
+
 			MagicLeapSetupDataScriptableObject.Instance.UpdateDefineSymbols();
 
 			var autoShow = EditorPrefs.GetBool(AutoShowEditorPrefKey, true);
@@ -44,10 +51,9 @@ namespace MagicLeapSetupTool.Editor
 				return;
 			}
 
-			    _setupWindow = GetWindow<MagicLeapSetupWindow>(false, WINDOW_TITLE_LABEL);
-                _setupWindow.minSize = new Vector2(350, 520);
-                _setupWindow.maxSize = new Vector2(350, 580);
-                EditorApplication.projectChanged += FullRefresh;
+			MagicLeapSetupWindow.ForceOpen();
+			
+            
 		}
 	}
 }

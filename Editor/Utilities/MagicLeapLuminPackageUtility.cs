@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using Assembly = UnityEditor.Compilation.Assembly;
 #if MAGICLEAP
 using UnityEditor.XR.MagicLeap;
 using UnityEditor.XR.Management;
@@ -82,7 +83,9 @@ namespace MagicLeapSetupTool.Editor.Utilities
             {
                 if (_internalSDKUtilityType == null)
                 {
-                    _internalSDKUtilityType = TypeUtility.FindTypeByPartialName("UnityEditor.XR.MagicLeap.SDKUtility", "+");
+                    var assembly= System.Reflection.Assembly.Load("UnityEditor.XR.MagicLeap");
+                    _internalSDKUtilityType = assembly.GetType("UnityEditor.XR.MagicLeap.SDKUtility");
+                  
                 }
 
                 return _internalSDKUtilityType;
@@ -90,13 +93,20 @@ namespace MagicLeapSetupTool.Editor.Utilities
         }
 
 #if MAGICLEAP
+        private static Type _XRSettingsManager;
         public static XRGeneralSettingsPerBuildTarget currentSettings
         {
             get
             {
-                var s = TypeUtility.FindTypeByPartialName("UnityEditor.XR.Management.XRSettingsManager");
+                if (_XRSettingsManager == null)
+                {
+                    var assembly = System.Reflection.Assembly.Load("UnityEditor.XR.Management");
+                    Debug.Log($"{_XRSettingsManager.Assembly.FullName} | {assembly.GetType("UnityEditor.XR.Management.XRSettingsManager")}");
+                    _XRSettingsManager = TypeUtility.FindTypeByPartialName("UnityEditor.XR.Management.XRSettingsManager");
 
-                var currentSettingsProperty = s.GetProperty("currentSettings", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+                }
+               
+                var currentSettingsProperty = _XRSettingsManager.GetProperty("currentSettings", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
                 var settings = (XRGeneralSettingsPerBuildTarget) currentSettingsProperty.GetValue(null);
 
                 return settings;
@@ -181,13 +191,19 @@ namespace MagicLeapSetupTool.Editor.Utilities
             Debug.Log("Enable");
 #if MAGICLEAP
 
+            if (_XRSettingsManager == null)
+            {
+                var assembly = System.Reflection.Assembly.Load("UnityEditor.XR.Management");
+                Debug.Log($"{_XRSettingsManager.Assembly.FullName} | {assembly.GetType("UnityEditor.XR.Management.XRSettingsManager")}");
+                _XRSettingsManager = TypeUtility.FindTypeByPartialName("UnityEditor.XR.Management.XRSettingsManager");
 
-            var findTypeByPartialName = TypeUtility.FindTypeByPartialName("UnityEditor.XR.Management.XRSettingsManager");
+            }
+   
 
-            var method = findTypeByPartialName.GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-            method.Invoke(findTypeByPartialName, null);
-            var info = findTypeByPartialName.GetMethod("CreateAllChildSettingsProviders", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-            info.Invoke(findTypeByPartialName, null);
+            var method = _XRSettingsManager.GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+            method.Invoke(_XRSettingsManager, null);
+            var info = _XRSettingsManager.GetMethod("CreateAllChildSettingsProviders", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+            info.Invoke(_XRSettingsManager, null);
 
             Debug.Log(currentSettings);
             UpdateLoader(BuildTargetGroup.Lumin);

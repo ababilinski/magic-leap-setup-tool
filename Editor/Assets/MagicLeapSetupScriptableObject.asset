@@ -18,7 +18,7 @@ MonoBehaviour:
   CheckingAvailability: 0
   HasCompatibleMagicLeapSdk: 1
   HasMagicLeapSdkInstalled: 1
-  HasCorrectGraphicConfiguration: 0
+  HasCorrectGraphicConfiguration: 1
   LuminSettingEnabled: 1
   GetSdkFromPackageManager: 0
   ValidCertificatePath: 1
