@@ -10,6 +10,9 @@ using UnityEngine;
 
 namespace MagicLeapSetupTool.Editor
 {
+    /// <summary>
+    /// IMGUI custom buttons and text to show in the setup window
+    /// </summary>
     public class CustomGuiContent
     {
         public static class CustomButtons

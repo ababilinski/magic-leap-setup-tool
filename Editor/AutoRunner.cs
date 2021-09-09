@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using MagicLeapSetupTool.Editor.ScriptableObjects;
 using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -28,7 +29,8 @@ namespace MagicLeapSetupTool.Editor
 
 		private static void OnEditorApplicationUpdate()
 		{
-			if (!MagicLeapSetupDataScriptableObject.Instance)
+			var data = MagicLeapSetupDataScriptableObject.Instance;
+			if (!data)
 			{
 				return;
 			}
@@ -36,10 +38,10 @@ namespace MagicLeapSetupTool.Editor
 			MagicLeapSetupDataScriptableObject.Instance.UpdateDefineSymbols();
 
 			var autoShow = EditorPrefs.GetBool(AutoShowEditorPrefKey, true);
-			if (!MagicLeapSetup.HasRootSDKPathInEditorPrefs
-			 || !MagicLeapSetup.HasLuminInstalled
+			if (!data.HasRootSDKPathInEditorPrefs
+			 || !data.HasLuminInstalled
 			 || EditorUserBuildSettings.activeBuildTarget != BuildTarget.Lumin
-			 || !MagicLeapSetup.HasCompatibleMagicLeapSdk)
+			 || !data.HasCompatibleMagicLeapSdk)
 			{
 				autoShow = true;
 				EditorPrefs.SetBool(AutoShowEditorPrefKey, true);

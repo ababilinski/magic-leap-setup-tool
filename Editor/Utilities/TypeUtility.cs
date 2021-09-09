@@ -4,49 +4,48 @@
 */
 
 using System;
-using System.Linq;
-using System.Reflection;
-using NUnit.Compatibility;
-using UnityEngine;
+using System.Collections.Generic;
 
 namespace MagicLeapSetupTool.Editor.Utilities
 {
-    public static class TypeUtility
-    {
-        public static Type FindTypeByPartialName(string contains, string doesNotContain = null)
-        {
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            Type returnType = null;
-            foreach (var assembly in assemblies)
-            {
-                var types = assembly.GetTypes();
+	/// <summary>
+	/// Utility that adds ability to find Types by partial names
+	/// </summary>
+	public static class TypeUtility
+	{
+		private static readonly List<string> _typeFullNames = new List<string>();
+		private static readonly Dictionary<string, Type> _typesByFullname = new Dictionary<string, Type>();
+		private static int _assembliesCount;
+		public static Type FindTypeByPartialName(string contains, string doesNotContain = null, bool fullRefresh=false)
+		{
+			var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+			if (_assembliesCount < assemblies.Length || fullRefresh)
+			{
+				foreach (var assembly in assemblies)
+				{
+					var types = assembly.GetTypes();
 
-                foreach (var scriptType in types)
-                {
-                    if (scriptType.FullName != null)
-                    {
-                        if (!string.IsNullOrEmpty(doesNotContain) && scriptType.FullName.Contains(doesNotContain))
-                        {
-                            continue;
-                        }
+					foreach (var scriptType in types)
+					{
+						if (scriptType.FullName != null)
+						{
+							var key = scriptType.Assembly.GetName().FullName + scriptType.FullName;
+							_typeFullNames.Add(key);
+							_typesByFullname.Add(key, scriptType);
+						}
+					}
+				}
+				_assembliesCount = assemblies.Length;
+			}
+		
+			string foundType="";
+			foundType = !string.IsNullOrEmpty(doesNotContain) ? _typeFullNames.Find((e) => !e.Contains(doesNotContain) && 
+			e.Contains(contains)) : _typeFullNames.Find((e) => e.Contains(contains));
+			
+			return !string.IsNullOrEmpty(foundType) ? _typesByFullname[foundType] : null;
 
-                        //if (scriptType.FullName.ToUpper().Contains("LUMIN") || scriptType.FullName.ToUpper().Contains("MAGICLEAP") || scriptType.FullName.ToUpper().Contains("UNITYSDK"))
-                        //{
-                         //  Debug.Log($"TYPE: {scriptType.FullName} | {scriptType.Namespace} |  {scriptType.Assembly.GetName()} ::  {scriptType.Assembly.GetName(true)}");
-                        //}
-
-                        if (scriptType.FullName.Contains(contains))
-                        {
-                            returnType = scriptType;
-                            break;
-                        }
-                    }
-                }
-            }
-
-
-            return returnType;
-        }
+		
+		}
 
         /// <summary>
         ///     Checks if an assembly exists in the project by name.
@@ -55,26 +54,24 @@ namespace MagicLeapSetupTool.Editor.Utilities
         /// <param name="doesNotContain">filter</param>
         /// <returns></returns>
         public static bool AssemblyExists(string contains, string doesNotContain = null)
-        {
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+		{
+			var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            foreach (var assembly in assemblies)
-            {
-       
-              //  Debug.Log($"ASSEMBLY: {assembly.FullName}\nNAME:{assembly.GetName()}\nLOCATION: {assembly.Location}\nModule:{string.Join<Module>(",", assembly.GetModules())}");
-      
-                if (!string.IsNullOrEmpty(doesNotContain) && assembly.FullName.Contains(doesNotContain))
-                {
-                    continue;
-                }
+			foreach (var assembly in assemblies)
+			{
+				
+				if (!string.IsNullOrEmpty(doesNotContain) && assembly.FullName.Contains(doesNotContain))
+				{
+					continue;
+				}
 
-                if (assembly.FullName.Contains(contains))
-                {
-                    return true;
-                }
-            }
+				if (assembly.FullName.Contains(contains))
+				{
+					return true;
+				}
+			}
 
-            return false;
-        }
-    }
+			return false;
+		}
+	}
 }

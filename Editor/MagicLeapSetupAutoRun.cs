@@ -51,15 +51,26 @@ namespace MagicLeapSetupTool.Editor
 
         private static ApplyAllState _currentApplyAllState = ApplyAllState.Done;
 
-        internal static bool _allAutoStepsComplete => MagicLeapSetup.HasCorrectGraphicConfiguration
-                                                   && PlayerSettings.colorSpace == ColorSpace.Linear
-                                                   && MagicLeapSetup.HasMagicLeapSdkInstalled
-                                                   && MagicLeapSetup.ManifestIsUpdated
-                                                   && MagicLeapSetup.HasRootSDKPath
-                                                   && MagicLeapSetup.LuminSettingEnabled
-                                                   && MagicLeapSetup.HasLuminInstalled
-                                                   && MagicLeapSetup.HasCompatibleMagicLeapSdk
-                                                   && EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin;
+        internal static bool _allAutoStepsComplete
+        {
+            get
+            {
+            
+                if (_magicLeapSetupData == null)
+                {
+                    _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
+                }
+                return _magicLeapSetupData.HasCorrectGraphicConfiguration
+                   && _magicLeapSetupData.CorrectColorSpace
+                   && _magicLeapSetupData.HasMagicLeapSdkInstalled
+                   && _magicLeapSetupData.ManifestIsUpdated
+                   && _magicLeapSetupData.HasRootSDKPath
+                   && _magicLeapSetupData.LuminSettingEnabled
+                   && _magicLeapSetupData.HasLuminInstalled
+                   && _magicLeapSetupData.HasCompatibleMagicLeapSdk
+                   && _magicLeapSetupData.CorrectBuildTarget;
+            }
+        }
 
         private static MagicLeapSetupDataScriptableObject _magicLeapSetupData;
         private static SetSdkFolderSetupStep _setSdkFolderSetupStep = new SetSdkFolderSetupStep();
@@ -139,7 +150,6 @@ namespace MagicLeapSetupTool.Editor
                 {
                     case 0: //Continue
                         _setCertificateSetupStep.Execute(_magicLeapSetupData);
-                        MagicLeapSetup.BrowseForCertificate();
                         break;
                     case 1: //Stop
                         CurrentApplyAllState = ApplyAllState.Done;
@@ -160,8 +170,12 @@ namespace MagicLeapSetupTool.Editor
 
         internal static void Tick()
         {
-          
-            var _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || MagicLeapSetup.IsBusy || EditorApplication.isUpdating;
+            if (_magicLeapSetupData == null)
+            {
+                _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
+                return;
+            }
+            var _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || _magicLeapSetupData.Busy || EditorApplication.isUpdating;
             if (CurrentApplyAllState != ApplyAllState.Done && !_loading)
             {
                 ApplyAll();
@@ -172,11 +186,7 @@ namespace MagicLeapSetupTool.Editor
 
         private static void ApplyAll()
         {
-            if (_magicLeapSetupData == null)
-            {
-                _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
-                return;
-            }
+          
             switch (CurrentApplyAllState)
             {
                 case ApplyAllState.SwitchBuildTarget:

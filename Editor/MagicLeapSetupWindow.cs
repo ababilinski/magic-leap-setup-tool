@@ -123,7 +123,7 @@ namespace MagicLeapSetupTool.Editor
         private void OnDisable()
         {
             EditorPrefs.SetBool(PREVIOUS_CERTIFICATE_PROMPT_KEY, true);
-            EditorPrefs.SetBool(AutoShowEditorPrefKey, !MagicLeapSetup.ValidCertificatePath || !MagicLeapSetupAutoRun._allAutoStepsComplete || !MagicLeapSetup.HasCompatibleMagicLeapSdk);
+            EditorPrefs.SetBool(AutoShowEditorPrefKey, !_magicLeapSetupData.ValidCertificatePath || !MagicLeapSetupAutoRun._allAutoStepsComplete || !_magicLeapSetupData.HasCompatibleMagicLeapSdk);
         }
 
         private void OnDestroy()
@@ -140,7 +140,7 @@ namespace MagicLeapSetupTool.Editor
         {
            
             DrawHeader();
-            _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || MagicLeapSetup.IsBusy || EditorApplication.isUpdating;
+            _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || _magicLeapSetupData.Busy || EditorApplication.isUpdating;
             _magicLeapSetupData.Loading = _loading;
             if (_magicLeapSetupData.Loading)
             {
@@ -220,7 +220,7 @@ namespace MagicLeapSetupTool.Editor
         private void OnInspectorUpdate()
         {
         
-            if (!_loading && MagicLeapSetup.LuminSettingEnabled && !MagicLeapSetup.ValidCertificatePath && _showPreviousCertificatePrompt && !string.IsNullOrWhiteSpace(MagicLeapSetup.PreviousCertificatePath))
+            if (!_loading && _magicLeapSetupData.LuminSettingEnabled && !_magicLeapSetupData.ValidCertificatePath && _showPreviousCertificatePrompt && !string.IsNullOrWhiteSpace(_magicLeapSetupData.PreviousCertificatePath))
             {
                 FoundPreviousCertificateLocationPrompt();
             }
@@ -352,7 +352,7 @@ namespace MagicLeapSetupTool.Editor
             GUILayout.FlexibleSpace();
             var currentGUIEnabledStatus = GUI.enabled;
             GUI.enabled = !_loading;
-            if (MagicLeapSetupAutoRun._allAutoStepsComplete && MagicLeapSetup.ValidCertificatePath)
+            if (MagicLeapSetupAutoRun._allAutoStepsComplete && _magicLeapSetupData.ValidCertificatePath)
             {
                 GUI.backgroundColor = Color.green;
                 if (GUILayout.Button("Close", GUILayout.MinWidth(20)))
@@ -387,14 +387,15 @@ namespace MagicLeapSetupTool.Editor
             switch (usePreviousCertificateOption)
             {
                 case 0: //Yes
-                    MagicLeapSetup.CertificatePath = MagicLeapSetup.PreviousCertificatePath;
+                    _magicLeapSetupData.CertificatePath = _magicLeapSetupData.PreviousCertificatePath;
+                
                     break;
                 case 1: //Cancel
                     EditorPrefs.SetBool(PREVIOUS_CERTIFICATE_PROMPT_KEY, false);
                     _showPreviousCertificatePrompt = false;
                     break;
                 case 2: //Browse
-                    MagicLeapSetup.BrowseForCertificate();
+                    _setCertificateSetupStep.Execute(_magicLeapSetupData);
                     break;
             }
         }

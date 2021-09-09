@@ -2,7 +2,10 @@
 using UnityEngine;
 
 namespace MagicLeapSetupTool.Editor
-{
+{   
+    /// <summary>
+    /// IMGUI Styles for editor window
+    /// </summary>
     public static class Styles
     {
 

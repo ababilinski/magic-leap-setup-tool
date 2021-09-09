@@ -7,6 +7,9 @@ using UnityEngine;
 
 namespace MagicLeapSetupTool.Editor.Setup
 {
+	/// <summary>
+	/// Updates the SDK manifest file based on <see cref="MagicLeapSetupTool.Editor.Templates.DefaultPackageTemplate" />
+	/// </summary>
 	public class UpdateManifestSetupStep:ISetupStep
 	{
 		private const string UPDATE_MANIFEST_LABEL = "Update the manifest file";

@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace MagicLeapSetupTool.Editor.Setup
 {
+	/// <summary>
+	///     Installs Lumin XR plugin
+	/// </summary>
 	public class InstallPluginSetupStep : ISetupStep
 	{
 		private const string FAILED_TO_EXECUTE_ERROR = "Failed to execute [{0}]"; //0 is method/action name
@@ -17,22 +20,19 @@ namespace MagicLeapSetupTool.Editor.Setup
 		public static int BusyCounter
 		{
 			get => _busyCounter;
-			set
-			{
-
-				_busyCounter = Mathf.Clamp(value, 0, 100);
-			}
+			set => _busyCounter = Mathf.Clamp(value, 0, 100);
 		}
 
 		public bool Busy => BusyCounter > 0;
+
 		/// <inheritdoc />
 		public bool Draw(MagicLeapSetupDataScriptableObject data)
 		{
 			//Makes sure the user changes to the Lumin Build Target before being able to set the other options
 			GUI.enabled = data.HasRootSDKPath && data.CorrectBuildTarget && !data.Loading;
-			 if (CustomGuiContent.CustomButtons.DrawConditionButton(INSTALL_PLUGIN_LABEL, data.HasLuminInstalled, CONDITION_MET_LABEL, INSTALL_PLUGIN_BUTTON_LABEL, Styles.FixButtonStyle))
-			 {
-				 Execute(data);
+			if (CustomGuiContent.CustomButtons.DrawConditionButton(INSTALL_PLUGIN_LABEL, data.HasLuminInstalled, CONDITION_MET_LABEL, INSTALL_PLUGIN_BUTTON_LABEL, Styles.FixButtonStyle))
+			{
+				Execute(data);
 				return true;
 			}
 
@@ -67,7 +67,11 @@ namespace MagicLeapSetupTool.Editor.Setup
 			}
 		}
 
-		
+		/// <summary>
+		///     Checks for the Lumin SDK availability and refreshes the Scriptable Object variables
+		///     <see cref="MagicLeapSetupTool.Editor.ScriptableObjects.MagicLeapSetupDataScriptableObject.RefreshVariables" />
+		/// </summary>
+		/// <param name="data"></param>
 		public void CheckSDKAvailability(MagicLeapSetupDataScriptableObject data)
 		{
 			data.UpdateDefineSymbols();
@@ -80,7 +84,6 @@ namespace MagicLeapSetupTool.Editor.Setup
 				BusyCounter++;
 				MagicLeapLuminPackageUtility.CheckForLuminSdkPackage(OnCheckForLuminRequestFinished);
 				MagicLeapLuminPackageUtility.CheckForMagicLeapSdkPackage(OnCheckForMagicLeapPackageInPackageManager);
-
 			}
 
 

@@ -7,31 +7,35 @@ using UnityEngine;
 
 namespace MagicLeapSetupTool.Editor.Setup
 {
-	public class SetSdkFolderSetupStep: ISetupStep
+	/// <summary>
+	///     Sets the Lumin SDK folder in the Preferences window
+	/// </summary>
+	public class SetSdkFolderSetupStep : ISetupStep
 	{
-
 	#region GUI TEXT
 
 		private const string LOCATE_SDK_FOLDER_LABEL = "Set external Lumin SDK Folder";
 		private const string CONDITION_MET_CHANGE_LABEL = "Change";
 		private const string LOCATE_SDK_FOLDER_BUTTON_LABEL = "Locate SDK";
-        private const string SDK_FILE_BROWSER_TITLE = "Set external Lumin SDK Folder";        //Title text of SDK path browser
+		private const string SDK_FILE_BROWSER_TITLE = "Set external Lumin SDK Folder"; //Title text of SDK path browser
 
-    #endregion
+	#endregion
 
 	#region DEBUG LOGS
-        private const string SET_MAGIC_LEAP_DIR_MESSAGE = "Updated Magic Leap SDK path to [{0}].";  //[0] folder path
-    #endregion
+
+		private const string SET_MAGIC_LEAP_DIR_MESSAGE = "Updated Magic Leap SDK path to [{0}]."; //[0] folder path
+
+	#endregion
+
 		/// <inheritdoc />
 		public bool Draw(MagicLeapSetupDataScriptableObject data)
 		{
-
 			if (CustomGuiContent.CustomButtons.DrawConditionButton(new GUIContent(LOCATE_SDK_FOLDER_LABEL),
-																   data.HasRootSDKPath,
-																   new GUIContent(CONDITION_MET_CHANGE_LABEL,
-																	   data.SdkRoot),
-																   new GUIContent(LOCATE_SDK_FOLDER_BUTTON_LABEL),
-																   Styles.FixButtonStyle, false))
+																	data.HasRootSDKPath,
+																	new GUIContent(CONDITION_MET_CHANGE_LABEL,
+																					data.SdkRoot),
+																	new GUIContent(LOCATE_SDK_FOLDER_BUTTON_LABEL),
+																	Styles.FixButtonStyle, false))
 			{
 				Execute(data);
 				return true;
@@ -46,6 +50,11 @@ namespace MagicLeapSetupTool.Editor.Setup
 			BrowseForSDK(data);
 		}
 
+		/// <summary>
+		///     Gets the current SDK location. If none is found. returns the mlsdk folder
+		/// </summary>
+		/// <param name="data"></param>
+		/// <returns></returns>
 		public static string GetCurrentSDKLocation(MagicLeapSetupDataScriptableObject data)
 		{
 			var currentPath = data.SdkRoot;
@@ -63,16 +72,25 @@ namespace MagicLeapSetupTool.Editor.Setup
 			return currentPath;
 		}
 
+		/// <summary>
+		///     Opens dialogue to select SDK folder
+		/// </summary>
+		/// <param name="data"></param>
 		public static void BrowseForSDK(MagicLeapSetupDataScriptableObject data)
 		{
 			var path = EditorUtility.OpenFolderPanel(SDK_FILE_BROWSER_TITLE, GetCurrentSDKLocation(data),
-													 GetCurrentSDKFolderName(data));
+													GetCurrentSDKFolderName(data));
 			if (path.Length != 0)
 			{
-				SetRootSDK(data,path);
+				SetRootSDK(data, path);
 			}
 		}
 
+		/// <summary>
+		///     Gets current SDK folder name based on the SDK path
+		/// </summary>
+		/// <param name="data"></param>
+		/// <returns></returns>
 		public static string GetCurrentSDKFolderName(MagicLeapSetupDataScriptableObject data)
 		{
 			var currentPath = data.SdkRoot;
@@ -91,6 +109,10 @@ namespace MagicLeapSetupTool.Editor.Setup
 			return "";
 		}
 
+		/// <summary>
+		///     Returns the default Magic Leap install path [HOME/MagicLeap/mlsdk/]
+		/// </summary>
+		/// <returns></returns>
 		public static string DefaultSDKPath()
 		{
 			var root = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -108,20 +130,28 @@ namespace MagicLeapSetupTool.Editor.Setup
 			return Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 		}
 
-
+		/// <summary>
+		///     Sets the SDK path in the Unity Editor
+		/// </summary>
+		/// <param name="data"></param>
+		/// <param name="path"></param>
 		public static void SetRootSDK(MagicLeapSetupDataScriptableObject data, string path)
 		{
 			data.SetSdkRoot(path);
-		
-			Debug.Log(string.Format(SET_MAGIC_LEAP_DIR_MESSAGE, path));
 
+			Debug.Log(string.Format(SET_MAGIC_LEAP_DIR_MESSAGE, path));
 		}
 
+		/// <summary>
+		///     Finds the SDK path based on the default install location and newest added folder
+		/// </summary>
+		/// <param name="data"></param>
+		/// <returns></returns>
 		public static string FindSDKPath(MagicLeapSetupDataScriptableObject data)
 		{
 			var editorSdkPath = data.SdkRoot;
 			if (string.IsNullOrEmpty(editorSdkPath)
-			 || !Directory.Exists(editorSdkPath) /* && File.Exists(Path.Combine(editorSdkPath, MANIFEST_PATH))*/)
+			|| !Directory.Exists(editorSdkPath) /* && File.Exists(Path.Combine(editorSdkPath, MANIFEST_PATH))*/)
 			{
 				var root = Environment.GetEnvironmentVariable("USERPROFILE")
 						?? Environment.GetEnvironmentVariable("HOME");
