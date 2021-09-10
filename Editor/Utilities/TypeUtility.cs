@@ -21,6 +21,8 @@ namespace MagicLeapSetupTool.Editor.Utilities
 			var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 			if (_assembliesCount < assemblies.Length || fullRefresh)
 			{
+				_typeFullNames.Clear();
+				_typesByFullname.Clear();
 				foreach (var assembly in assemblies)
 				{
 					var types = assembly.GetTypes();

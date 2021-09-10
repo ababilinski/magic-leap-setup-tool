@@ -388,6 +388,7 @@ namespace MagicLeapSetupTool.Editor
             {
                 case 0: //Yes
                     _magicLeapSetupData.CertificatePath = _magicLeapSetupData.PreviousCertificatePath;
+                    AssetDatabase.SaveAssets();
                 
                     break;
                 case 1: //Cancel
