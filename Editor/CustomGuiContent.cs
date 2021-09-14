@@ -89,35 +89,36 @@ namespace MagicLeapSetupTool.Editor
                 var lastEnabledGUIState = GUI.enabled;
                 bool returnValue = false;
                 GUILayout.BeginHorizontal(groupStyle);
-                EditorGUILayout.LabelField(label, EditorStyles.boldLabel, GUILayout.ExpandWidth(false));
-                GUILayout.FlexibleSpace();
-                if (condition)
                 {
-                    GUI.backgroundColor = conditionMetColor ?? Color.green;
-                    if (disableOnConditionMet)
+                    EditorGUILayout.LabelField(label, EditorStyles.boldLabel, GUILayout.ExpandWidth(false));
+                    GUILayout.FlexibleSpace();
+                    if (condition)
                     {
-                        GUI.enabled = false;
-                    }
+                        GUI.backgroundColor = conditionMetColor ?? Color.green;
+                        if (disableOnConditionMet)
+                        {
+                            GUI.enabled = false;
+                        }
 
-                    if (GUILayout.Button(conditionMetText, buttonStyle))
-                    {
-                        returnValue= true;
-                    }
+                        if (GUILayout.Button(conditionMetText, buttonStyle))
+                        {
+                            returnValue= true;
+                        }
 
-                    if (disableOnConditionMet)
+                        if (disableOnConditionMet)
+                        {
+                            GUI.enabled = lastEnabledGUIState;
+                        }
+                    }
+                    else
                     {
-                        GUI.enabled = lastEnabledGUIState;
+                        GUI.backgroundColor = conditionMissingColor ?? Color.yellow;
+                        if (GUILayout.Button(conditionMissingText, buttonStyle))
+                        {
+                            returnValue= true;
+                        }
                     }
                 }
-                else
-                {
-                    GUI.backgroundColor = conditionMissingColor ?? Color.yellow;
-                    if (GUILayout.Button(conditionMissingText, buttonStyle))
-                    {
-                        return true;
-                    }
-                }
-
                 GUILayout.EndHorizontal();
                 GUILayout.Space(5);
 

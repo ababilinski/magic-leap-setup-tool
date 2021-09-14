@@ -152,54 +152,55 @@ namespace MagicLeapSetupTool.Editor
             }
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
-            GUILayout.Space(5);
-            if(_setSdkFolderSetupStep.Draw(_magicLeapSetupData))
             {
-                Repaint();
+                GUILayout.Space(5);
+                if (_setSdkFolderSetupStep.Draw(_magicLeapSetupData))
+                {
+                    Repaint();
+                }
+
+                if (_buildTargetSetupStep.Draw(_magicLeapSetupData))
+                {
+                    Repaint();
+                }
+
+                if (_installPluginSetupStep.Draw(_magicLeapSetupData))
+                {
+                    Repaint();
+                }
+
+                if (_enablePluginSetupStep.Draw(_magicLeapSetupData))
+                {
+                    Repaint();
+                }
+
+                if (_updateManifestSetupStep.Draw(_magicLeapSetupData))
+                {
+                    Repaint();
+                }
+
+                if (_setCertificateSetupStep.Draw(_magicLeapSetupData))
+                {
+                    Repaint();
+                }
+
+                if (_colorSpaceSetupStep.Draw(_magicLeapSetupData))
+                {
+                    Repaint();
+                }
+
+                if (_importMagicLeapSdkSetupStep.Draw(_magicLeapSetupData))
+                {
+                    Repaint();
+                }
+
+                if (_updateGraphicsApiSetupStep.Draw(_magicLeapSetupData))
+                {
+                    Repaint();
+                }
+
+                GUI.backgroundColor = Color.clear;
             }
-
-            if (_buildTargetSetupStep.Draw(_magicLeapSetupData))
-            {
-                Repaint();
-            }
-
-            if (_installPluginSetupStep.Draw(_magicLeapSetupData))
-            {
-                Repaint();
-            }
-
-            if (_enablePluginSetupStep.Draw(_magicLeapSetupData))
-            {
-                Repaint();
-            }
-
-            if (_updateManifestSetupStep.Draw(_magicLeapSetupData))
-            {
-                Repaint();
-            }
-
-            if (_setCertificateSetupStep.Draw(_magicLeapSetupData))
-            {
-                Repaint();
-            }
-
-            if (_colorSpaceSetupStep.Draw(_magicLeapSetupData))
-            {
-                Repaint();
-            }
-
-            if (_importMagicLeapSdkSetupStep.Draw(_magicLeapSetupData))
-            {
-                Repaint();
-            }
-
-            if (_updateGraphicsApiSetupStep.Draw(_magicLeapSetupData))
-            {
-                Repaint();
-            }
-
-            GUI.backgroundColor = Color.clear;
-
             GUILayout.EndVertical();
             GUILayout.Space(30);
             DrawHelpLinks();
@@ -295,9 +296,11 @@ namespace MagicLeapSetupTool.Editor
         {
             GUILayout.Space(5);
             GUILayout.BeginVertical();
-            EditorGUILayout.LabelField(TITLE_LABEL, Styles.TitleStyle);
-            EditorGUILayout.LabelField(SUBTITLE_LABEL, Styles.TitleStyle);
-            GUILayout.EndVertical();
+            {
+                EditorGUILayout.LabelField(TITLE_LABEL, Styles.TitleStyle);
+                EditorGUILayout.LabelField(SUBTITLE_LABEL, Styles.TitleStyle);
+                GUILayout.EndVertical();
+            }
             CustomGuiContent.DrawUILine(Color.grey, 1, 5);
             GUI.backgroundColor = Color.white;
             GUILayout.Space(2);
@@ -322,14 +325,16 @@ namespace MagicLeapSetupTool.Editor
             GUI.enabled = true;
             GUI.backgroundColor = Color.white;
             GUILayout.BeginVertical(EditorStyles.helpBox);
-            GUILayout.Space(2);
-            EditorGUILayout.LabelField(LINKS_TITLE, Styles.HelpTitleStyle);
-            CustomGuiContent.DisplayLink(GETTING_STARTED_HELP_TEXT, GETTING_STARTED_URL, 3);
-            CustomGuiContent.DisplayLink(SET_CERTIFICATE_HELP_TEXT, Get_CERTIFICATE_URL, 3);
-            CustomGuiContent.DisplayLink(FAILED_TO_IMPORT_HELP_TEXT, SETUP_ENVIRONMENT_URL, 3);
+            {
+                GUILayout.Space(2);
+                EditorGUILayout.LabelField(LINKS_TITLE, Styles.HelpTitleStyle);
+                CustomGuiContent.DisplayLink(GETTING_STARTED_HELP_TEXT, GETTING_STARTED_URL, 3);
+                CustomGuiContent.DisplayLink(SET_CERTIFICATE_HELP_TEXT, Get_CERTIFICATE_URL, 3);
+                CustomGuiContent.DisplayLink(FAILED_TO_IMPORT_HELP_TEXT, SETUP_ENVIRONMENT_URL, 3);
 
-            GUILayout.Space(2);
-            GUILayout.Space(2);
+                GUILayout.Space(2);
+                GUILayout.Space(2);
+            }
             GUILayout.EndVertical();
             GUI.enabled = currentGUIEnabledStatus;
         }
