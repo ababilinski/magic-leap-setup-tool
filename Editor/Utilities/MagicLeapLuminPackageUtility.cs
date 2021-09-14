@@ -38,7 +38,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
 		private const string LUMIN_PACKAGE_ID = "com.unity.xr.magicleap";                                                     // Used to check if the build platform is installed
 		private const string MAGIC_LEAP_PACKAGE_ID = "com.magicleap.unitysdk";                                                // Used to check if the build platform is installed
 		private const string MAGIC_LEAP_LOADER_ID = "MagicLeapLoader";                                                        // Used to test if the loader is installed and active
-		private const string ASSET_RELATIVE_PATH_TO_OLD_SDK = "MagicLeap";                                                    //used to check for  SDK<26
+		private const string ASSET_RELATIVE_PATH_TO_OLD_SDK = "MagicLeap/APIs";                                               //used to check for  SDK<26
 		private const string SDK_PATH_EDITOR_PREF_KEY = "LuminSDKRoot";                                                       //used to set and check the sdk path [key is an internal variable set by Unity]
 		private const string SDK_PACKAGE_MANAGER_PATH_RELATIVE_TO_SDK_ROOT = "../../tools/unity/v{0}/com.magicleap.unitysdk"; //The path to the Package Manager folder relative to the SDK Root | {0} is the sdk version
 		private const string OLD_ASSET_PACKAGE_PATH = "../../tools/unity/v{0}/MagicLeap.unitypackage";                        // {0} is the SDK version. Used for SDK<26

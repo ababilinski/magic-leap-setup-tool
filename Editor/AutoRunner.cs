@@ -35,10 +35,10 @@ namespace MagicLeapSetupTool.Editor
 				return;
 			}
 
-			if (UnityConsoleUtility.GetErrorCount() > 0)
-			{
-				return;
-			}
+			//if (UnityConsoleUtility.GetErrorCount() > 0)
+			//{
+			//	return;
+			//}
 			MagicLeapSetupDataScriptableObject.Instance.UpdateDefineSymbols();
 
 			var autoShow = EditorPrefs.GetBool(AutoShowEditorPrefKey, true);

@@ -32,8 +32,8 @@ namespace MagicLeapSetupTool.Editor.Setup
 		private const string IMPORTING_PACKAGE_TEXT = "importing [{0}]"; // {0} is the path  to the unity package
 		private const string CANNOT_FIND_PACKAGE_TEXT = "Could not find Unity Package at path [{0}].\n SDK Path: [{1}]\nSDK Version: [{2}]";
 		private const string FAILED_TO_EXECUTE_ERROR = "Failed to execute [{0}]"; //0 is method/action name
-		private const string CONFLICT_WHILE_INSTALLING_MAGIC_LEAP_PACKAGE_MANAGER_ASSET = "Cannot install Magic Leap SDK. an old version is currently installed. Please delete: [Assets/MagicLeap] and try again.";
-		private const string ASSET_RELATIVE_PATH_TO_OLD_SDK = "MagicLeap";                          //used to check for  SDK<26
+		private const string CONFLICT_WHILE_INSTALLING_MAGIC_LEAP_PACKAGE_MANAGER_ASSET = "Cannot install Magic Leap SDK. an old version is currently installed. Please delete: [Assets/MagicLeap/APIs] and try again.";
+		private const string ASSET_RELATIVE_PATH_TO_OLD_SDK = "MagicLeap/APIs";                          //used to check for  SDK<26
 		private const string WRONG_VERSION_FORMAT_ERROR = "Cannot convert Label: [{0}] to Version"; // 0 is version that failed to parse
 		private const string MAGIC_LEAP_PACKAGE_ID = "com.magicleap.unitysdk";                      // Used to check if the build platform is installed
 		internal const string SETUP_ENVIRONMENT_URL = "https://developer.magicleap.com/en-us/learn/guides/set-up-development-environment#installing-lumin-sdk-packages";
