@@ -77,8 +77,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
 			{
 				if (_internalSDKUtilityType == null)
 				{
-					var assembly = Assembly.Load("UnityEditor.XR.MagicLeap");
-					_internalSDKUtilityType = assembly.GetType("UnityEditor.XR.MagicLeap.SDKUtility");
+					_internalSDKUtilityType = TypeUtility.FindTypeByPartialName("UnityEditor.XR.MagicLeap.SDKUtility", "+");
 				}
 
 				return _internalSDKUtilityType;
@@ -93,9 +92,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
 			{
 				if (_XRSettingsManager == null)
 				{
-					var assembly = Assembly.Load("UnityEditor.XR.Management");
-					Debug.Log($"{_XRSettingsManager.Assembly.FullName} | {assembly.GetType("UnityEditor.XR.Management.XRSettingsManager")}");
-					_XRSettingsManager = TypeUtility.FindTypeByPartialName("UnityEditor.XR.Management.XRSettingsManager");
+						_XRSettingsManager = TypeUtility.FindTypeByPartialName("UnityEditor.XR.Management.XRSettingsManager");
 				}
 
 				var currentSettingsProperty = _XRSettingsManager.GetProperty("currentSettings", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
@@ -191,8 +188,6 @@ namespace MagicLeapSetupTool.Editor.Utilities
 
 			if (_XRSettingsManager == null)
 			{
-				var assembly = Assembly.Load("UnityEditor.XR.Management");
-				Debug.Log($"{_XRSettingsManager.Assembly.FullName} | {assembly.GetType("UnityEditor.XR.Management.XRSettingsManager")}");
 				_XRSettingsManager = TypeUtility.FindTypeByPartialName("UnityEditor.XR.Management.XRSettingsManager");
 			}
 

@@ -84,7 +84,9 @@ namespace MagicLeapSetupTool.Editor.Setup
 
 
 			serializedObject.Update();
+			data.RefreshVariables();
 #endif
+			
 			BusyCounter--;
 		}
 
