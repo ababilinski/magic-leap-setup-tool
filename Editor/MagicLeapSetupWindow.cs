@@ -66,7 +66,6 @@ namespace MagicLeapSetupTool.Editor
         private static MagicLeapSetupDataScriptableObject _magicLeapSetupData;
         private SetSdkFolderSetupStep _setSdkFolderSetupStep = new SetSdkFolderSetupStep();
         private BuildTargetSetupStep _buildTargetSetupStep = new BuildTargetSetupStep();
-        private InstallPluginSetupStep _installPluginSetupStep = new InstallPluginSetupStep();
         private EnablePluginSetupStep _enablePluginSetupStep = new EnablePluginSetupStep();
         private UpdateManifestSetupStep _updateManifestSetupStep = new UpdateManifestSetupStep();
         private SetCertificateSetupStep _setCertificateSetupStep = new SetCertificateSetupStep();
@@ -164,7 +163,7 @@ namespace MagicLeapSetupTool.Editor
                     Repaint();
                 }
 
-                if (_installPluginSetupStep.Draw(_magicLeapSetupData))
+                if (_importMagicLeapSdkSetupStep.Draw(_magicLeapSetupData))
                 {
                     Repaint();
                 }
@@ -173,7 +172,7 @@ namespace MagicLeapSetupTool.Editor
                 {
                     Repaint();
                 }
-
+                
                 if (_updateManifestSetupStep.Draw(_magicLeapSetupData))
                 {
                     Repaint();
@@ -189,11 +188,8 @@ namespace MagicLeapSetupTool.Editor
                     Repaint();
                 }
 
-                if (_importMagicLeapSdkSetupStep.Draw(_magicLeapSetupData))
-                {
-                    Repaint();
-                }
-
+              
+                
                 if (_updateGraphicsApiSetupStep.Draw(_magicLeapSetupData))
                 {
                     Repaint();
@@ -236,16 +232,17 @@ namespace MagicLeapSetupTool.Editor
         {
         
             EditorApplication.quitting += OnQuit;
-            if (EditorPrefs.GetBool(WindowClosedEditorPrefKey, false))
-            {
-                return;
-            }
+       
+          
 
             _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
+        
             if (_magicLeapSetupData == null)
             {
                 return;
             }
+
+            EditorApplication.projectChanged += _magicLeapSetupData.UpdateDefineSymbols;
             MagicLeapSetupAutoRun.CheckLastAutoSetupState();
             _showPreviousCertificatePrompt = EditorPrefs.GetBool(PREVIOUS_CERTIFICATE_PROMPT_KEY, true);
             if (!_showing)
@@ -261,6 +258,10 @@ namespace MagicLeapSetupTool.Editor
 
         public static void ForceOpen()
         {
+            if (EditorPrefs.GetBool(WindowClosedEditorPrefKey, false))
+            {
+                return;
+            }
             Open();
         }
 

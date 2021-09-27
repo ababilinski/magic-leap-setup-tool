@@ -187,8 +187,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 		/// <param name="data"></param>
 		private static void RemoveMagicLeapSdkFromPackageManager(MagicLeapSetupDataScriptableObject data)
 		{
-			if (data.HasLuminInstalled)
-			{
+			
 				MagicLeapLuminPackageUtility.RemoveMagicLeapPackageManagerSDK(() =>
 																			{
 																				BusyCounter++;
@@ -206,11 +205,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 																					Debug.LogError(string.Format(CANNOT_FIND_PACKAGE_TEXT, Path.GetFullPath(unityPackagePath), MagicLeapLuminPackageUtility.GetSDKPath(), MagicLeapLuminPackageUtility.GetSdkVersion()));
 																				}
 																			});
-			}
-			else
-			{
-				Debug.LogError(SDK_NOT_INSTALLED_TEXT);
-			}
+			
 		}
 
 		/// <summary>
@@ -263,14 +258,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 			EditorPrefs.SetBool($"{Application.dataPath}-Install", false);
 
 			// _busyCounter++;
-			if (data.HasLuminInstalled)
-			{
-				AddMagicLeapSdkFromPackageManagerAndRefresh(data);
-			}
-			else
-			{
-				Debug.LogError(SDK_NOT_INSTALLED_TEXT);
-			}
+			AddMagicLeapSdkFromPackageManagerAndRefresh(data);
 		}
 
 

@@ -35,6 +35,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
 
 	#endregion
 
+		private const string LUMIN_SDK_PATH_KEY = "LuminSDKRoot";                                                             //Editor Pref key to set/get the Lumin SDK
 		private const string LUMIN_PACKAGE_ID = "com.unity.xr.magicleap";                                                     // Used to check if the build platform is installed
 		private const string MAGIC_LEAP_PACKAGE_ID = "com.magicleap.unitysdk";                                                // Used to check if the build platform is installed
 		private const string MAGIC_LEAP_LOADER_ID = "MagicLeapLoader";                                                        // Used to test if the loader is installed and active
@@ -294,6 +295,15 @@ namespace MagicLeapSetupTool.Editor.Utilities
 
 			return ((Version)sdkAPILevelProperty.GetValue(InternalSDKUtilityType, null)).ToString();
 #else
+			var sdkRoot = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
+			if (!string.IsNullOrEmpty(sdkRoot))
+			{
+				var pathFolders = sdkRoot.Replace('\\','/').Split(new []{ '/' }, StringSplitOptions.RemoveEmptyEntries);
+				var sdkVersionFolder = pathFolders[pathFolders.Length - 1];
+				sdkVersionFolder=sdkVersionFolder.Replace("v", "");
+				return sdkVersionFolder;
+			}
+		
             return "0.0.0";
 #endif
 		}
@@ -473,7 +483,6 @@ namespace MagicLeapSetupTool.Editor.Utilities
         public static bool UseSdkFromPackageManager()
 		{
 			var versionLabel = GetSdkVersion();
-
 			if (Version.TryParse(versionLabel, out var currentVersion))
 			{
 				if (currentVersion >= new Version(0, 26, 0))

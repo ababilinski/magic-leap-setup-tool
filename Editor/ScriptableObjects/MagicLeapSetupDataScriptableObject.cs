@@ -140,7 +140,7 @@ namespace MagicLeapSetupTool.Editor.ScriptableObjects
 			LuminSettingEnabled = MagicLeapLuminPackageUtility.IsLuminXREnabled();
 			ValidCertificatePath = !string.IsNullOrEmpty(CertificatePath) && File.Exists(CertificatePath);
 			HasIncompatibleSDKAssetPackage = MagicLeapLuminPackageUtility.HasIncompatibleUnityAssetPackage();
-			HasMagicLeapSdkInstalled = TypeUtility.FindTypeByPartialName(TEST_FOR_ML_SCRIPT) != null || HasMagicLeapSdkInPackageManager;
+			HasMagicLeapSdkInstalled = TypeUtility.FindTypeByPartialName(TEST_FOR_ML_SCRIPT) != null;
 			HasCorrectGraphicConfiguration = CorrectGraphicsConfiguration();
 #if MAGICLEAP
 			ManifestIsUpdated = MagicLeapLuminPackageUtility.MagicLeapManifest != null && MagicLeapLuminPackageUtility.MagicLeapManifest.minimumAPILevel == SdkApiLevel;
