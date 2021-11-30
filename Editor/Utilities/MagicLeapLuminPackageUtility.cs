@@ -35,6 +35,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
 
 	#endregion
 
+		private const string MAGIC_LEAP_DEFINES_SYMBOL = "MAGICLEAP";
 		private const string LUMIN_SDK_PATH_KEY = "LuminSDKRoot";                                                             //Editor Pref key to set/get the Lumin SDK
 		private const string LUMIN_PACKAGE_ID = "com.unity.xr.magicleap";                                                     // Used to check if the build platform is installed
 		private const string MAGIC_LEAP_PACKAGE_ID = "com.magicleap.unitysdk";                                                // Used to check if the build platform is installed
@@ -43,8 +44,12 @@ namespace MagicLeapSetupTool.Editor.Utilities
 		private const string SDK_PATH_EDITOR_PREF_KEY = "LuminSDKRoot";                                                       //used to set and check the sdk path [key is an internal variable set by Unity]
 		private const string SDK_PACKAGE_MANAGER_PATH_RELATIVE_TO_SDK_ROOT = "../../tools/unity/v{0}/com.magicleap.unitysdk"; //The path to the Package Manager folder relative to the SDK Root | {0} is the sdk version
 		private const string OLD_ASSET_PACKAGE_PATH = "../../tools/unity/v{0}/MagicLeap.unitypackage";                        // {0} is the SDK version. Used for SDK<26
+		private const string CERTIFICATE_PATH_KEY = "LuminCertificate";                                                       //Editor Pref key to set/get previously used certificate
 		public static Action<bool> EnableLuminXRFinished;
-
+		public static readonly string SdkRoot = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
+		public static readonly bool HasRootSDKPath = !string.IsNullOrEmpty(SdkRoot) && Directory.Exists(SdkRoot);
+		
+		public static readonly string PreviousCertificatePath = EditorPrefs.GetString(CERTIFICATE_PATH_KEY, "");
 		private static Type _internalSDKUtilityType;
 
 #if MAGICLEAP
@@ -71,34 +76,22 @@ namespace MagicLeapSetupTool.Editor.Utilities
 			}
 		}
 #endif
-
-		public static Type InternalSDKUtilityType
-		{
-			get
-			{
-				if (_internalSDKUtilityType == null)
-				{
-					_internalSDKUtilityType = TypeUtility.FindTypeByPartialName("UnityEditor.XR.MagicLeap.SDKUtility", "+");
-				}
-
-				return _internalSDKUtilityType;
-			}
-		}
-
+		public static readonly Type InternalSDKUtilityType = Type.GetType("UnityEditor.XR.MagicLeap.SDKUtility,UnityEditor.XR.MagicLeap");
+		private static readonly PropertyInfo _sdkPathProperty = InternalSDKUtilityType.GetProperty("sdkPath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+		private static readonly PropertyInfo _sdkVersionProperty = InternalSDKUtilityType.GetProperty("sdkVersion", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+		private static readonly PropertyInfo _sdkAPILevelProperty = InternalSDKUtilityType.GetProperty("sdkAPILevel", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+		
 #if MAGICLEAP
-		private static Type _XRSettingsManager;
+		private static readonly Type _cachedXRSettingsManagerType = Type.GetType("UnityEditor.XR.Management.XRSettingsManager,Unity.XR.Management.Editor");
+		private static readonly PropertyInfo _cachedXRSettingsProperty = _cachedXRSettingsManagerType.GetProperty("currentSettings", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+		private static readonly MethodInfo _cachedCreateXRSettingsMethod = _cachedXRSettingsManagerType.GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+		private static readonly MethodInfo _cachedCreateAllChildSettingsProvidersMethod = _cachedXRSettingsManagerType.GetMethod("CreateAllChildSettingsProviders", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 		public static XRGeneralSettingsPerBuildTarget currentSettings
 		{
 			get
 			{
-				if (_XRSettingsManager == null)
-				{
-						_XRSettingsManager = TypeUtility.FindTypeByPartialName("UnityEditor.XR.Management.XRSettingsManager");
-				}
-
-				var currentSettingsProperty = _XRSettingsManager.GetProperty("currentSettings", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-				var settings = (XRGeneralSettingsPerBuildTarget)currentSettingsProperty.GetValue(null);
-
+				var settings = (XRGeneralSettingsPerBuildTarget)_cachedXRSettingsProperty.GetValue(null);
+			
 				return settings;
 			}
 		}
@@ -184,19 +177,10 @@ namespace MagicLeapSetupTool.Editor.Utilities
         /// </summary>
         public static void EnableLuminXRPlugin()
 		{
-			Debug.Log("Enable");
 #if MAGICLEAP
 
-			if (_XRSettingsManager == null)
-			{
-				_XRSettingsManager = TypeUtility.FindTypeByPartialName("UnityEditor.XR.Management.XRSettingsManager");
-			}
-
-
-			var method = _XRSettingsManager.GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-			method.Invoke(_XRSettingsManager, null);
-			var info = _XRSettingsManager.GetMethod("CreateAllChildSettingsProviders", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-			info.Invoke(_XRSettingsManager, null);
+			_cachedCreateXRSettingsMethod.Invoke(_cachedXRSettingsManagerType, null);
+			_cachedCreateAllChildSettingsProvidersMethod.Invoke(_cachedXRSettingsManagerType, null);
 
 			Debug.Log(currentSettings);
 			UpdateLoader(BuildTargetGroup.Lumin);
@@ -291,9 +275,8 @@ namespace MagicLeapSetupTool.Editor.Utilities
 				return "0.0.0";
 			}
 
-			var sdkAPILevelProperty = InternalSDKUtilityType.GetProperty("sdkVersion", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-
-			return ((Version)sdkAPILevelProperty.GetValue(InternalSDKUtilityType, null)).ToString();
+		
+			return ((Version)_sdkVersionProperty.GetValue(InternalSDKUtilityType, null)).ToString();
 #else
 			var sdkRoot = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
 			if (!string.IsNullOrEmpty(sdkRoot))
@@ -315,9 +298,8 @@ namespace MagicLeapSetupTool.Editor.Utilities
         public static string GetSDKPath()
 		{
 #if MAGICLEAP
-			var sdkPathProperty = InternalSDKUtilityType.GetProperty("sdkPath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-
-			return (string)sdkPathProperty.GetValue(InternalSDKUtilityType, null);
+		
+			return (string)_sdkPathProperty.GetValue(InternalSDKUtilityType, null);
 #else
             return "";
 #endif
@@ -336,9 +318,8 @@ namespace MagicLeapSetupTool.Editor.Utilities
 				return -1;
 			}
 
-			var sdkAPILevelProperty = InternalSDKUtilityType.GetProperty("sdkAPILevel", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-
-			return (int)sdkAPILevelProperty.GetValue(InternalSDKUtilityType, null);
+		
+			return (int)_sdkAPILevelProperty.GetValue(InternalSDKUtilityType, null);
 #else
             return -1;
 #endif
@@ -354,6 +335,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
 			var versionLabel = GetSdkVersion();
 			if (Version.TryParse(versionLabel, out var currentVersion))
 			{
+				//Debug.Log($"Version: {currentVersion}");
 				if (currentVersion == new Version(0, 0, 0))
 				{
 					return true;
@@ -362,7 +344,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
 				if (currentVersion < new Version(0, 26, 0))
 				{
 					// return Directory.EnumerateDirectories(path, searchPattern).Any();
-					var cachePath = Path.GetFullPath(Path.Combine(Application.dataPath, "../Library"));
+					var cachePath = Path.GetFullPath(Path.Combine(Application.dataPath, "../Library/PackageCache"));
 					var magicLeapDirectoryExists = Directory.EnumerateDirectories(cachePath, MAGIC_LEAP_PACKAGE_ID, SearchOption.AllDirectories).Any();
 					return !magicLeapDirectoryExists;
 				}
@@ -503,6 +485,37 @@ namespace MagicLeapSetupTool.Editor.Utilities
         public static void CheckForLuminSdkPackage(Action<bool, bool> successAndInstalled)
 		{
 			PackageUtility.HasPackageInstalled(LUMIN_PACKAGE_ID, successAndInstalled);
+		}
+
+		public static void UpdateDefineSymbols()
+		{
+			EditorApplication.delayCall += () =>
+											{
+												PackageUtility.HasPackageInstalled(MAGIC_LEAP_PACKAGE_ID, OnFinishedChecked); 
+											};
+			
+
+
+
+			void OnFinishedChecked(bool success, bool installed)
+			{
+				var hasDefineSymbol = DefineSymbolsUtility.ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
+				if (installed)
+				{
+					if (!hasDefineSymbol)
+					{
+						DefineSymbolsUtility.RemoveDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
+					}
+				}
+				else
+				{
+					if (hasDefineSymbol)
+					{
+						DefineSymbolsUtility.RemoveDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
+					}
+				}
+			}
+		
 		}
 	}
 }

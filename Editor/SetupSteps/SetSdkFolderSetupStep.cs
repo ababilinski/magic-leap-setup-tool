@@ -2,6 +2,7 @@
 using System.IO;
 using MagicLeapSetupTool.Editor.Interfaces;
 using MagicLeapSetupTool.Editor.ScriptableObjects;
+using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
 
@@ -27,17 +28,23 @@ namespace MagicLeapSetupTool.Editor.Setup
 
 	#endregion
 
+		private const string LUMIN_SDK_PATH_KEY = "LuminSDKRoot"; //Editor Pref key to set/get the Lumin SDK
+		private static string _sdkRoot;
+		private static bool _hasRootSDKPath;
 		/// <inheritdoc />
-		public bool Draw(MagicLeapSetupDataScriptableObject data)
+		public void Refresh()
 		{
-			if (CustomGuiContent.CustomButtons.DrawConditionButton(new GUIContent(LOCATE_SDK_FOLDER_LABEL),
-																	data.HasRootSDKPath,
-																	new GUIContent(CONDITION_MET_CHANGE_LABEL,
-																					data.SdkRoot),
-																	new GUIContent(LOCATE_SDK_FOLDER_BUTTON_LABEL),
-																	Styles.FixButtonStyle, false))
+			_hasRootSDKPath = MagicLeapLuminPackageUtility.HasRootSDKPath;
+			_sdkRoot = MagicLeapLuminPackageUtility.SdkRoot;
+		}
+		/// <inheritdoc />
+		public bool Draw()
+		{
+			if (CustomGuiContent.CustomButtons.DrawConditionButton(new GUIContent(LOCATE_SDK_FOLDER_LABEL), _hasRootSDKPath,
+																	new GUIContent(CONDITION_MET_CHANGE_LABEL, _sdkRoot),
+																	new GUIContent(LOCATE_SDK_FOLDER_BUTTON_LABEL),Styles.FixButtonStyle, false))
 			{
-				Execute(data);
+				Execute();
 				return true;
 			}
 
@@ -45,9 +52,9 @@ namespace MagicLeapSetupTool.Editor.Setup
 		}
 
 		/// <inheritdoc />
-		public void Execute(MagicLeapSetupDataScriptableObject data)
+		public void Execute()
 		{
-			BrowseForSDK(data);
+			BrowseForSDK();
 		}
 
 		/// <summary>
@@ -55,9 +62,9 @@ namespace MagicLeapSetupTool.Editor.Setup
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public static string GetCurrentSDKLocation(MagicLeapSetupDataScriptableObject data)
+		public static string GetCurrentSDKLocation()
 		{
-			var currentPath = data.SdkRoot;
+			var currentPath = _sdkRoot;
 			if (string.IsNullOrEmpty(currentPath) || !Directory.Exists(currentPath))
 			{
 				currentPath = DefaultSDKPath();
@@ -76,13 +83,13 @@ namespace MagicLeapSetupTool.Editor.Setup
 		///     Opens dialogue to select SDK folder
 		/// </summary>
 		/// <param name="data"></param>
-		public static void BrowseForSDK(MagicLeapSetupDataScriptableObject data)
+		public static void BrowseForSDK()
 		{
-			var path = EditorUtility.OpenFolderPanel(SDK_FILE_BROWSER_TITLE, GetCurrentSDKLocation(data),
-													GetCurrentSDKFolderName(data));
+			var path = EditorUtility.OpenFolderPanel(SDK_FILE_BROWSER_TITLE, GetCurrentSDKLocation(),
+													GetCurrentSDKFolderName());
 			if (path.Length != 0)
 			{
-				SetRootSDK(data, path);
+				SetRootSDK(path);
 			}
 		}
 
@@ -91,12 +98,12 @@ namespace MagicLeapSetupTool.Editor.Setup
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public static string GetCurrentSDKFolderName(MagicLeapSetupDataScriptableObject data)
+		public static string GetCurrentSDKFolderName()
 		{
-			var currentPath = data.SdkRoot;
+			var currentPath = _sdkRoot;
 			if (string.IsNullOrEmpty(currentPath) || !Directory.Exists(currentPath))
 			{
-				currentPath = FindSDKPath(data);
+				currentPath = FindSDKPath();
 			}
 
 			//version folder i.e: v[x].[x].[x]
@@ -135,21 +142,22 @@ namespace MagicLeapSetupTool.Editor.Setup
 		/// </summary>
 		/// <param name="data"></param>
 		/// <param name="path"></param>
-		public static void SetRootSDK(MagicLeapSetupDataScriptableObject data, string path)
+		public static void SetRootSDK(string path)
 		{
-			data.SetSdkRoot(path);
+			EditorPrefs.SetString(LUMIN_SDK_PATH_KEY, path);
 
 			Debug.Log(string.Format(SET_MAGIC_LEAP_DIR_MESSAGE, path));
 		}
+
 
 		/// <summary>
 		///     Finds the SDK path based on the default install location and newest added folder
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		public static string FindSDKPath(MagicLeapSetupDataScriptableObject data)
+		public static string FindSDKPath()
 		{
-			var editorSdkPath = data.SdkRoot;
+			var editorSdkPath = _sdkRoot;
 			if (string.IsNullOrEmpty(editorSdkPath)
 			|| !Directory.Exists(editorSdkPath) /* && File.Exists(Path.Combine(editorSdkPath, MANIFEST_PATH))*/)
 			{
@@ -192,5 +200,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 
 			return null;
 		}
+		
+		
 	}
 }

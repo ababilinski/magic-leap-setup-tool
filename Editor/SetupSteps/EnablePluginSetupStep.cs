@@ -1,6 +1,7 @@
 ﻿using MagicLeapSetupTool.Editor.Interfaces;
 using MagicLeapSetupTool.Editor.ScriptableObjects;
 using MagicLeapSetupTool.Editor.Utilities;
+using UnityEditor;
 using UnityEngine;
 
 namespace MagicLeapSetupTool.Editor.Setup
@@ -17,22 +18,38 @@ namespace MagicLeapSetupTool.Editor.Setup
 		private const string ENABLE_LUMIN_FINISHED_UNSUCCESSFULLY_WARNING = "Unsuccessful call:[{0}]. action finished, but Lumin XR Settings are still not enabled."; //0 is method/action name
 		private const string FAILED_TO_EXECUTE_ERROR = "Failed to execute [{0}]";                                                                                     //0 is method/action name
 		private static int _busyCounter;
-
+		private static bool _correctBuildTarget;
 		public static int BusyCounter
 		{
 			get => _busyCounter;
 			set => _busyCounter = Mathf.Clamp(value, 0, 100);
 		}
 
+		private bool _hasRootSDKPath;
+		public static bool LuminSettingEnabled;
+		public static readonly bool HasLuminInstalled =
+														#if MAGICLEAP
+															true;
+														#else
+															false;
+														#endif
 		public bool Busy => BusyCounter > 0;
 
 		/// <inheritdoc />
-		public bool Draw(MagicLeapSetupDataScriptableObject data)
+		public void Refresh()
 		{
-			GUI.enabled = data.HasRootSDKPath && data.CorrectBuildTarget && data.HasLuminInstalled && !data.Loading;
-			if (CustomGuiContent.CustomButtons.DrawConditionButton(ENABLE_PLUGIN_SETTINGS_LABEL, data.LuminSettingEnabled, CONDITION_MET_LABEL, ENABLE_PLUGIN_LABEL, Styles.FixButtonStyle))
+			_hasRootSDKPath = MagicLeapLuminPackageUtility.HasRootSDKPath;
+			_correctBuildTarget = EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin;
+			LuminSettingEnabled = MagicLeapLuminPackageUtility.IsLuminXREnabled();
+		}
+		
+		/// <inheritdoc />
+		public bool Draw()
+		{
+			GUI.enabled = _hasRootSDKPath && _correctBuildTarget && HasLuminInstalled;
+			if (CustomGuiContent.CustomButtons.DrawConditionButton(ENABLE_PLUGIN_SETTINGS_LABEL, LuminSettingEnabled, CONDITION_MET_LABEL, ENABLE_PLUGIN_LABEL, Styles.FixButtonStyle))
 			{
-				Execute(data);
+				Execute();
 				return true;
 			}
 
@@ -40,14 +57,14 @@ namespace MagicLeapSetupTool.Editor.Setup
 		}
 
 		/// <inheritdoc />
-		public void Execute(MagicLeapSetupDataScriptableObject data)
+		public void Execute()
 		{
-			if (data.LuminSettingEnabled)
+			if (LuminSettingEnabled)
 			{
 				return;
 			}
 
-			if (!data.HasLuminInstalled)
+			if (!HasLuminInstalled)
 			{
 				Debug.LogWarning(ENABLE_PLUGIN_FAILED_PLUGIN_NOT_INSTALLED_MESSAGE);
 				return;
@@ -63,9 +80,9 @@ namespace MagicLeapSetupTool.Editor.Setup
 			{
 				if (success)
 				{
-					data.RefreshVariables();
-					data.LuminSettingEnabled = MagicLeapLuminPackageUtility.IsLuminXREnabled();
-					if (!data.LuminSettingEnabled)
+					
+					LuminSettingEnabled = MagicLeapLuminPackageUtility.IsLuminXREnabled();
+					if (LuminSettingEnabled)
 					{
 						Debug.LogWarning(string.Format(ENABLE_LUMIN_FINISHED_UNSUCCESSFULLY_WARNING,
 														"Enable Lumin XR action"));
@@ -83,7 +100,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 
 
 			UnityProjectSettingsUtility.OpenXrManagementWindow();
-			data.UpdateDefineSymbols();
+			MagicLeapLuminPackageUtility.UpdateDefineSymbols();
 		}
 	}
 }

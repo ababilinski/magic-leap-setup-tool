@@ -13,21 +13,16 @@ MonoBehaviour:
   m_Name: MagicLeapSetupScriptableObject
   m_EditorClassIdentifier: 
   Loading: 0
-  CorrectBuildTarget: 1
   IsRestarting: 0
   CheckingAvailability: 0
   HasCompatibleMagicLeapSdk: 1
   HasMagicLeapSdkInstalled: 1
   HasCorrectGraphicConfiguration: 0
-  LuminSettingEnabled: 1
+  LuminSettingEnabled: 0
   GetSdkFromPackageManager: 1
-  ValidCertificatePath: 1
+  ValidCertificatePath: 0
   ImportMagicLeapPackageFromPackageManager: 1
   HasIncompatibleSDKAssetPackage: 0
   SdkApiLevel: 10
-  CorrectColorSpace: 1
-  PreviousCertificatePath: C:/Users/ababi/Downloads/developer-certificate/__MACOSX/developer-certificate/._magic-leap-adrian.cert
-  HasRootSDKPath: 1
-  HasMagicLeapSdkInPackageManager: 1
+  CorrectColorSpace: 0
   EmbeddedPackage: 0
-  HasRootSDKPathInEditorPrefs: 1

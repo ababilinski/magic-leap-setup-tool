@@ -48,7 +48,10 @@ namespace MagicLeapSetupTool.Editor.Utilities
 	#endregion
 
 		private static readonly Dictionary<BuildTarget, bool> _supportedPlatformByBuildTarget = new Dictionary<BuildTarget, bool>(); //memo to avoid requesting the same value multiple times
-
+		public static readonly Type CachedEditorApplicationType = Type.GetType("UnityEditor.EditorApplication,UnityEditor.dll");
+		public static readonly Type CachedPlayerSettingsLuminType = Type.GetType("UnityEditor.PlayerSettings+Lumin");
+		public static readonly PropertyInfo CachedEditorLuminAPILevelProperty = CachedEditorApplicationType.GetProperty("certificatePath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+		public static readonly MethodInfo CachedEditorRequestCloseAndRelaunchMethodInfo = CachedEditorApplicationType.GetMethod("RequestCloseAndRelaunchWithCurrentArguments", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 		static UnityProjectSettingsUtility()
 		{
 			DeleteFlaggedFoldersAndFile();
@@ -176,6 +179,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
         private static void ClearSceneDirtiness(Scene scene)
 		{
 			var moduleManager = TypeUtility.FindTypeByPartialName("UnityEditor.SceneManagement.EditorSceneManager", "+");
+			Debug.Log($"TYPE FOUND: {moduleManager.FullName} || Assembly: {moduleManager.Assembly.FullName}");
 			var methodInfo = moduleManager.GetMethod("ClearSceneDirtiness", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 			methodInfo.Invoke(null, new object[] { scene });
 		}
@@ -185,11 +189,10 @@ namespace MagicLeapSetupTool.Editor.Utilities
         /// </summary>
         public static void RequestCloseAndRelaunchWithCurrentArguments()
 		{
-			var editorApplicationDll = Type.GetType("UnityEditor.EditorApplication,UnityEditor.dll");
-			var requestClose = editorApplicationDll.GetMethod("RequestCloseAndRelaunchWithCurrentArguments", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-			requestClose.Invoke(null, null);
+			CachedEditorRequestCloseAndRelaunchMethodInfo.Invoke(null, null);
 		}
 
+	
         /// <summary>
         ///     Checks the given build target if a graphic device type is available
         /// </summary>
@@ -276,10 +279,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
         ///     Gets a string that is a combination of the company name and product name
         /// </summary>
         /// <returns></returns>
-        public static string GetProjectKey()
-		{
-			return PlayerSettings.companyName + "." + PlayerSettings.productName;
-		}
+     
 
         /// <summary>
         ///     Return path of file relative to the project root. i.e Assets/PathToFile
@@ -734,24 +734,17 @@ namespace MagicLeapSetupTool.Editor.Utilities
             /// <returns>certificate path</returns>
             public static string GetInternalCertificatePath()
 			{
-				var coreModuleAssembly = Assembly.Load("UnityEditor.CoreModule");
-
-				var foundScript = coreModuleAssembly.GetType("UnityEditor.PlayerSettings+Lumin");
-
-				if (foundScript != null)
+			
+				if ((object)CachedPlayerSettingsLuminType != null)
 				{
-					var sdkAPILevelProperty = foundScript.GetProperty("certificatePath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-					if (sdkAPILevelProperty != null)
+					if ((object)CachedEditorLuminAPILevelProperty != null)
 					{
-						return (string)sdkAPILevelProperty.GetValue(foundScript, null);
+						return (string)CachedEditorLuminAPILevelProperty.GetValue(CachedPlayerSettingsLuminType, null);
 					}
-
+				
 					Debug.LogError("Could not find Property: [certificatePath] in script [UnityEditor.PlayerSettings+Lumin]");
 				}
-				else
-				{
-					Debug.LogError("Could not find Type: [UnityEditor.PlayerSettings+Lumin]");
-				}
+				
 
 				return "NULL";
 			}
@@ -762,17 +755,12 @@ namespace MagicLeapSetupTool.Editor.Utilities
             /// <param name="certPath"></param>
             public static void SetInternalCertificatePath(string certPath)
 			{
-				var coreModuleAssembly = Assembly.Load("UnityEditor.CoreModule");
 
-				var foundScript = coreModuleAssembly.GetType("UnityEditor.PlayerSettings+Lumin");
-
-
-				if (foundScript != null)
+				if ((object)CachedPlayerSettingsLuminType != null)
 				{
-					var sdkAPILevelProperty = foundScript.GetProperty("certificatePath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-					if (sdkAPILevelProperty != null)
+					if ((object)CachedEditorLuminAPILevelProperty != null)
 					{
-						sdkAPILevelProperty.SetValue(foundScript, certPath);
+						CachedEditorLuminAPILevelProperty.SetValue(CachedPlayerSettingsLuminType, certPath);
 					}
 					else
 					{

@@ -17,7 +17,15 @@ namespace MagicLeapSetupTool.Editor.Setup
 		private const string CONDITION_MET_LABEL = "Done";
 		private const string ENABLE_PLUGIN_FAILED_PLUGIN_NOT_INSTALLED_MESSAGE = "Magic Leap Pug-in is not installed.";
 		private static int _busyCounter;
-
+		public int SdkApiLevel;
+		public static bool ManifestIsUpdated { private set; get; }
+		public bool LuminSettingEnabled;
+		private static readonly bool _hasLuminInstalled =
+														#if MAGICLEAP
+															true;
+														#else
+															false;
+														#endif
 		public static int BusyCounter
 		{
 			get => _busyCounter;
@@ -29,13 +37,28 @@ namespace MagicLeapSetupTool.Editor.Setup
 		}
 
 		public bool Busy => BusyCounter > 0;
+
+
 		/// <inheritdoc />
-		public bool Draw(MagicLeapSetupDataScriptableObject data)
+		public void Refresh() 
 		{
-			GUI.enabled = data.LuminSettingEnabled && !data.Loading;
-			 if (CustomGuiContent.CustomButtons.DrawConditionButton(UPDATE_MANIFEST_LABEL, data.ManifestIsUpdated, CONDITION_MET_LABEL, UPDATE_MANIFEST_BUTTON_LABEL, Styles.FixButtonStyle))
+			SdkApiLevel = MagicLeapLuminPackageUtility.GetSdkApiLevel();
+
+#if MAGICLEAP
+			ManifestIsUpdated = MagicLeapLuminPackageUtility.MagicLeapManifest != null && MagicLeapLuminPackageUtility.MagicLeapManifest.minimumAPILevel == SdkApiLevel;
+#else
+			ManifestIsUpdated = false;
+#endif
+			LuminSettingEnabled = MagicLeapLuminPackageUtility.IsLuminXREnabled();
+		}
+		
+		/// <inheritdoc />
+		public bool Draw()
+		{
+			GUI.enabled = LuminSettingEnabled;
+			 if (CustomGuiContent.CustomButtons.DrawConditionButton(UPDATE_MANIFEST_LABEL, ManifestIsUpdated, CONDITION_MET_LABEL, UPDATE_MANIFEST_BUTTON_LABEL, Styles.FixButtonStyle))
 			 {
-				 Execute(data);
+				 Execute();
 				return true;
 			}
 
@@ -43,10 +66,10 @@ namespace MagicLeapSetupTool.Editor.Setup
 		}
 
 		/// <inheritdoc />
-		public void Execute(MagicLeapSetupDataScriptableObject data)
+		public void Execute()
 		{
 			
-			if (!data.HasLuminInstalled)
+			if (_hasLuminInstalled)
 			{
 				Debug.LogWarning(ENABLE_PLUGIN_FAILED_PLUGIN_NOT_INSTALLED_MESSAGE);
 				return;
@@ -54,9 +77,8 @@ namespace MagicLeapSetupTool.Editor.Setup
 
 			BusyCounter++;
 #if MAGICLEAP
-			Debug.Log($"Setting SDK Version To: {data.SdkApiLevel}");
-			data.RefreshVariables();
-			MagicLeapLuminPackageUtility.MagicLeapManifest.minimumAPILevel = data.SdkApiLevel;
+			Debug.Log($"Setting SDK Version To: {SdkApiLevel}");
+			MagicLeapLuminPackageUtility.MagicLeapManifest.minimumAPILevel = SdkApiLevel;
 			var serializedObject = new SerializedObject(MagicLeapLuminPackageUtility.MagicLeapManifest);
 			var priv_groups = serializedObject.FindProperty("m_PrivilegeGroups");
 
@@ -84,7 +106,6 @@ namespace MagicLeapSetupTool.Editor.Setup
 
 
 			serializedObject.Update();
-			data.RefreshVariables();
 #endif
 			
 			BusyCounter--;

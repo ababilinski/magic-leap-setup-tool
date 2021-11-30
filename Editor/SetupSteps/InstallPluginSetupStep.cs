@@ -16,23 +16,39 @@ namespace MagicLeapSetupTool.Editor.Setup
 		private const string INSTALL_PLUGIN_BUTTON_LABEL = "Install Package";
 		private const string CONDITION_MET_LABEL = "Done";
 		private static int _busyCounter;
-
+		private static bool _correctBuildTarget;
+		private bool _hasRootSDKPath;
+		public static readonly bool HasLuminInstalled =
+														#if MAGICLEAP
+															true;
+														#else
+															false;
+														#endif
+		
 		public static int BusyCounter
 		{
 			get => _busyCounter;
 			set => _busyCounter = Mathf.Clamp(value, 0, 100);
 		}
 
+		public static bool LuminSettingEnabled;
 		public bool Busy => BusyCounter > 0;
 
 		/// <inheritdoc />
-		public bool Draw(MagicLeapSetupDataScriptableObject data)
+		public void Refresh()
+		{
+			LuminSettingEnabled = MagicLeapLuminPackageUtility.IsLuminXREnabled();
+			_correctBuildTarget = EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin;
+			_hasRootSDKPath = MagicLeapLuminPackageUtility.HasRootSDKPath;
+		}
+		/// <inheritdoc />
+		public bool Draw()
 		{
 			//Makes sure the user changes to the Lumin Build Target before being able to set the other options
-			GUI.enabled = data.HasRootSDKPath && data.CorrectBuildTarget && !data.Loading;
-			if (CustomGuiContent.CustomButtons.DrawConditionButton(INSTALL_PLUGIN_LABEL, data.HasLuminInstalled, CONDITION_MET_LABEL, INSTALL_PLUGIN_BUTTON_LABEL, Styles.FixButtonStyle))
+			GUI.enabled = _hasRootSDKPath && _correctBuildTarget;
+			if (CustomGuiContent.CustomButtons.DrawConditionButton(INSTALL_PLUGIN_LABEL, HasLuminInstalled, CONDITION_MET_LABEL, INSTALL_PLUGIN_BUTTON_LABEL, Styles.FixButtonStyle))
 			{
-				Execute(data);
+				Execute();
 				return true;
 			}
 
@@ -40,7 +56,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 		}
 
 		/// <inheritdoc />
-		public void Execute(MagicLeapSetupDataScriptableObject data)
+		public void Execute()
 		{
 			BusyCounter++;
 			MagicLeapLuminPackageUtility.AddLuminSdkPackage(OnAddLuminPackageRequestFinished);
@@ -51,10 +67,10 @@ namespace MagicLeapSetupTool.Editor.Setup
 			{
 				if (success)
 				{
-					if (data.LuminSettingEnabled)
+					if (LuminSettingEnabled)
 					{
 						Debug.LogError("DONE");
-						CheckSDKAvailability(data);
+						CheckSDKAvailability();
 					}
 				}
 				else
@@ -72,17 +88,15 @@ namespace MagicLeapSetupTool.Editor.Setup
 		///     <see cref="MagicLeapSetupTool.Editor.ScriptableObjects.MagicLeapSetupDataScriptableObject.RefreshVariables" />
 		/// </summary>
 		/// <param name="data"></param>
-		public void CheckSDKAvailability(MagicLeapSetupDataScriptableObject data)
+		public void CheckSDKAvailability()
 		{
-			data.UpdateDefineSymbols();
-			data.RefreshVariables();
+			MagicLeapLuminPackageUtility.UpdateDefineSymbols();
+			
 
 			if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin)
 			{
-				data.CheckingAvailability = true;
+			
 				BusyCounter++;
-				BusyCounter++;
-				MagicLeapLuminPackageUtility.CheckForLuminSdkPackage(OnCheckForLuminRequestFinished);
 				MagicLeapLuminPackageUtility.CheckForMagicLeapSdkPackage(OnCheckForMagicLeapPackageInPackageManager);
 			}
 
@@ -91,24 +105,14 @@ namespace MagicLeapSetupTool.Editor.Setup
 			void OnCheckForMagicLeapPackageInPackageManager(bool hasPackage)
 			{
 				//Debug.Log($"OnCheckForMagicLeapPackageInPackageManager: hasPackage: {hasPackage}");
-				data.RefreshVariables();
+			
 				BusyCounter--;
-				data.HasMagicLeapSdkInPackageManager = hasPackage;
+		
 			}
 
 
 
-			void OnCheckForLuminRequestFinished(bool success, bool hasLumin)
-			{
-				//Debug.Log($"OnCheckForLuminRequestFinished: success: {success} | hasLumin: {hasLumin}");
-				if (success && hasLumin)
-				{
-					data.RefreshVariables();
-				}
 
-				BusyCounter--;
-				data.CheckingAvailability = false;
-			}
 		}
 	}
 }

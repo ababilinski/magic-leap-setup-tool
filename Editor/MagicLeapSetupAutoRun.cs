@@ -60,29 +60,33 @@ namespace MagicLeapSetupTool.Editor
                 {
                     _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
                 }
-                return _magicLeapSetupData.HasCorrectGraphicConfiguration
-                   && _magicLeapSetupData.CorrectColorSpace
-                   && _magicLeapSetupData.HasMagicLeapSdkInstalled
-                   && _magicLeapSetupData.ManifestIsUpdated
-                   && _magicLeapSetupData.HasRootSDKPath
-                   && _magicLeapSetupData.LuminSettingEnabled
-                   && _magicLeapSetupData.HasLuminInstalled
-                   && _magicLeapSetupData.HasCompatibleMagicLeapSdk
-                   && _magicLeapSetupData.CorrectBuildTarget;
+                return UpdateGraphicsApiSetupStep.HasCorrectGraphicConfiguration
+                   && PlayerSettings.colorSpace == ColorSpace.Linear
+                   && ImportMagicLeapSdkSetupStep.HasMagicLeapSdkInstalled
+                   && UpdateManifestSetupStep.ManifestIsUpdated
+                   && SetupData.HasRootSDKPath
+                   && EnablePluginSetupStep.LuminSettingEnabled
+                   && _hasLuminInstalled
+                   && ImportMagicLeapSdkSetupStep.HasCompatibleMagicLeapSdk
+                   && BuildTargetSetupStep.CorrectBuildTarget;
             }
         }
 
         private static MagicLeapSetupDataScriptableObject _magicLeapSetupData;
         private static SetSdkFolderSetupStep _setSdkFolderSetupStep = new SetSdkFolderSetupStep();
         private static BuildTargetSetupStep _buildTargetSetupStep = new BuildTargetSetupStep();
-        private static InstallPluginSetupStep _installPluginSetupStep = new InstallPluginSetupStep();
         private static EnablePluginSetupStep _enablePluginSetupStep = new EnablePluginSetupStep();
         private static UpdateManifestSetupStep _updateManifestSetupStep = new UpdateManifestSetupStep();
         private static SetCertificateSetupStep _setCertificateSetupStep = new SetCertificateSetupStep();
         private static ImportMagicLeapSdkSetupStep _importMagicLeapSdkSetupStep = new ImportMagicLeapSdkSetupStep();
         private static ColorSpaceSetupStep _colorSpaceSetupStep = new ColorSpaceSetupStep();
         private static UpdateGraphicsApiSetupStep _updateGraphicsApiSetupStep = new UpdateGraphicsApiSetupStep();
-
+		private static readonly bool _hasLuminInstalled =
+														#if MAGICLEAP
+															true;
+														#else
+															false;
+														#endif
         internal static ApplyAllState CurrentApplyAllState
         {
             get => _currentApplyAllState;
@@ -141,7 +145,7 @@ namespace MagicLeapSetupTool.Editor
                
              
             }
-            else if (!_magicLeapSetupData.ValidCertificatePath)
+            else if (!SetCertificateSetupStep.ValidCertificatePath)
             {
                 var dialogComplex = EditorUtility.DisplayDialogComplex(APPLY_ALL_PROMPT_TITLE, APPLY_ALL_PROMPT_MISSING_CERT_MESSAGE,
                                                                        APPLY_ALL_PROMPT_MISSING_CERT_OK, APPLY_ALL_PROMPT_MISSING_CERT_CANCEL, APPLY_ALL_PROMPT_ALT);
@@ -149,7 +153,7 @@ namespace MagicLeapSetupTool.Editor
                 switch (dialogComplex)
                 {
                     case 0: //Continue
-                        _setCertificateSetupStep.Execute(_magicLeapSetupData);
+                        _setCertificateSetupStep.Execute();
                         break;
                     case 1: //Stop
                         CurrentApplyAllState = ApplyAllState.Done;
@@ -160,7 +164,7 @@ namespace MagicLeapSetupTool.Editor
                         break;
                 }
             }
-            else if (_magicLeapSetupData.ValidCertificatePath)
+            else if (SetCertificateSetupStep.ValidCertificatePath)
             {
                 EditorUtility.DisplayDialog(APPLY_ALL_PROMPT_TITLE, APPLY_ALL_PROMPT_NOTHING_TO_DO_MESSAGE,
                                             APPLY_ALL_PROMPT_NOTHING_TO_DO_OK);
@@ -186,42 +190,36 @@ namespace MagicLeapSetupTool.Editor
 
         private static void ApplyAll()
         {
-          
+          var correctBuildTarget = BuildTargetSetupStep.CorrectBuildTarget;
             switch (CurrentApplyAllState)
             {
                 case ApplyAllState.SwitchBuildTarget:
-                    if (!_magicLeapSetupData.CorrectBuildTarget)
+                    if (!correctBuildTarget)
                     {
                         Debug.Log(CHANGING_BUILD_PLATFORM_DEBUG);
-                       _buildTargetSetupStep.Execute(_magicLeapSetupData);
+                       _buildTargetSetupStep.Execute();
                     }
 
                     CurrentApplyAllState = ApplyAllState.InstallLumin;
                     break;
                 case ApplyAllState.InstallLumin:
-                    if (_magicLeapSetupData.CorrectBuildTarget)
+                    if (correctBuildTarget)
                     {
                        
-                        if (!_magicLeapSetupData.HasLuminInstalled)
-                        {
-                            _installPluginSetupStep.Execute(_magicLeapSetupData);
-                        }
+                        
 
                         CurrentApplyAllState = ApplyAllState.EnableXrPackage;
                     }
 
                     break;
                 case ApplyAllState.EnableXrPackage:
-                    if (_magicLeapSetupData.CorrectBuildTarget && _magicLeapSetupData.HasLuminInstalled)
+                    if (correctBuildTarget && _hasLuminInstalled)
                     {
-                        if (!_magicLeapSetupData.LuminSettingEnabled)
+                        if (!EnablePluginSetupStep.LuminSettingEnabled)
                         {
                             Debug.Log(ENABLING_LUMIN_SDK_DEBUG);
-                            _enablePluginSetupStep.Execute(_magicLeapSetupData);
-                            if (!_magicLeapSetupData.CheckingAvailability)
-                            {
-                                _magicLeapSetupData.CheckSDKAvailability();
-                            }
+                            _enablePluginSetupStep.Execute();
+                            ImportMagicLeapSdkSetupStep.CheckForMagicLeapSdkPackage();
                         }
 
                         CurrentApplyAllState = ApplyAllState.UpdateManifest;
@@ -229,12 +227,12 @@ namespace MagicLeapSetupTool.Editor
 
                     break;
                 case ApplyAllState.UpdateManifest:
-                    if (_magicLeapSetupData.CorrectBuildTarget && _magicLeapSetupData.HasLuminInstalled && _magicLeapSetupData.LuminSettingEnabled)
+                    if (correctBuildTarget && _hasLuminInstalled && EnablePluginSetupStep.LuminSettingEnabled)
                     {
-                        if (!_magicLeapSetupData.ManifestIsUpdated)
+                        if (!UpdateManifestSetupStep.ManifestIsUpdated)
                         {
                             Debug.Log(UPDATING_MANIFEST_DEBUG);
-                            _updateManifestSetupStep.Execute(_magicLeapSetupData);
+                            _updateManifestSetupStep.Execute();
                         }
 
                         CurrentApplyAllState = ApplyAllState.ChangeColorSpace;
@@ -243,12 +241,12 @@ namespace MagicLeapSetupTool.Editor
                     break;
 
                 case ApplyAllState.ChangeColorSpace:
-                    if (_magicLeapSetupData.CorrectBuildTarget && _magicLeapSetupData.HasLuminInstalled && _magicLeapSetupData.LuminSettingEnabled && _magicLeapSetupData.ManifestIsUpdated)
+                    if (correctBuildTarget && _hasLuminInstalled && EnablePluginSetupStep.LuminSettingEnabled && UpdateManifestSetupStep.ManifestIsUpdated)
                     {
-                        if (!_magicLeapSetupData.CorrectColorSpace)
+                        if (PlayerSettings.colorSpace != ColorSpace.Linear)
                         {
                             Debug.Log(UPDATING_COLORSPACE_DEBUG);
-                           _colorSpaceSetupStep.Execute(_magicLeapSetupData);
+                           _colorSpaceSetupStep.Execute();
                         }
 
                         CurrentApplyAllState = ApplyAllState.ImportSdkUnityPackage;
@@ -257,13 +255,13 @@ namespace MagicLeapSetupTool.Editor
                     break;
 
                 case ApplyAllState.ImportSdkUnityPackage:
-                    if (_magicLeapSetupData.CorrectBuildTarget && _magicLeapSetupData.HasLuminInstalled && _magicLeapSetupData.LuminSettingEnabled && _magicLeapSetupData.ManifestIsUpdated)
+                    if (correctBuildTarget && _hasLuminInstalled && EnablePluginSetupStep.LuminSettingEnabled && UpdateManifestSetupStep.ManifestIsUpdated)
                     {
-                        if (!_magicLeapSetupData.HasMagicLeapSdkInstalled)
+                        if (!ImportMagicLeapSdkSetupStep.HasMagicLeapSdkInstalled)
                         {
-                            if (_magicLeapSetupData.HasCompatibleMagicLeapSdk)
+                            if (ImportMagicLeapSdkSetupStep.HasCompatibleMagicLeapSdk)
                             {
-                               _importMagicLeapSdkSetupStep.Execute(_magicLeapSetupData);
+                               _importMagicLeapSdkSetupStep.Execute();
 
                                 Debug.Log(IMPORTING_LUMIN_UNITYPACKAGE_DEBUG);
                                 CurrentApplyAllState = ApplyAllState.ChangeGraphicsApi;
@@ -280,12 +278,12 @@ namespace MagicLeapSetupTool.Editor
                     break;
 
                 case ApplyAllState.ChangeGraphicsApi:
-                    if (_magicLeapSetupData.CorrectBuildTarget && _magicLeapSetupData.HasLuminInstalled && _magicLeapSetupData.LuminSettingEnabled && _magicLeapSetupData.ManifestIsUpdated && _magicLeapSetupData.HasMagicLeapSdkInstalled && _magicLeapSetupData.CorrectColorSpace)
+                    if (correctBuildTarget && _hasLuminInstalled && EnablePluginSetupStep.LuminSettingEnabled && UpdateManifestSetupStep.ManifestIsUpdated && ImportMagicLeapSdkSetupStep.HasMagicLeapSdkInstalled && PlayerSettings.colorSpace == ColorSpace.Linear)
                     {
-                        if (!_magicLeapSetupData.HasCorrectGraphicConfiguration)
+                        if (!UpdateGraphicsApiSetupStep.HasCorrectGraphicConfiguration)
                         {
                             Debug.Log(CHANGING_GRAPHICS_API_DEBUG);
-                            _updateGraphicsApiSetupStep.Execute(_magicLeapSetupData);
+                            _updateGraphicsApiSetupStep.Execute();
                         }
 
                         CurrentApplyAllState = ApplyAllState.Done;

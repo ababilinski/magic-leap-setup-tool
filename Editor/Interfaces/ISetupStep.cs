@@ -12,12 +12,14 @@ namespace MagicLeapSetupTool.Editor.Interfaces
 		/// </summary>
 		/// <param name="data"></param>
 		/// <returns></returns>
-		bool Draw(MagicLeapSetupDataScriptableObject data);
+		bool Draw();
 
 		/// <summary>
 		///     Action during step execution
 		/// </summary>
 		/// <param name="data"></param>
-		void Execute(MagicLeapSetupDataScriptableObject data);
+		void Execute();
+
+		void Refresh();
 	}
 }

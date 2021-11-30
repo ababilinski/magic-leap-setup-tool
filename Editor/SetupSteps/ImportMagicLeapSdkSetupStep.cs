@@ -37,38 +37,94 @@ namespace MagicLeapSetupTool.Editor.Setup
 		private const string WRONG_VERSION_FORMAT_ERROR = "Cannot convert Label: [{0}] to Version"; // 0 is version that failed to parse
 		private const string MAGIC_LEAP_PACKAGE_ID = "com.magicleap.unitysdk";                      // Used to check if the build platform is installed
 		internal const string SETUP_ENVIRONMENT_URL = "https://developer.magicleap.com/en-us/learn/guides/set-up-development-environment#installing-lumin-sdk-packages";
-		private static int _busyCounter;
 
+		private const string EMBED_PACKAGE_OPTION_TITLE = "Embed Installed Package?";
+		private const string EMBED_PACKAGE_OPTION_BODY = "Would you like to embed the Magic Leap SDK so that it is Read/Write enabled?";
+		private const string EMBED_PACKAGE_OPTION_OK = "Embed Package";
+		private const string EMBED_PACKAGE_OPTION_CANCEL = "Don't Embed";
+		
+		public static readonly Type CachedMagicLeapMLInputType = Type.GetType("UnityEngine.XR.MagicLeap.MLInput,LuminUnity"); // Test this assembly. If it does not exist. The package is not imported. 
+		public static bool HasMagicLeapSdkInstalled = (object)CachedMagicLeapMLInputType != null;
+		public static bool HasCompatibleMagicLeapSdk;
+		public static bool HasMagicLeapSdkInPackageManager;
+		public static bool GetSdkFromPackageManager;
+		public static bool HasIncompatibleSDKAssetPackage;
+		private bool _hasRootSDKPath;
+		private static int _busyCounter;
+		
 		public static int BusyCounter
 		{
 			get => _busyCounter;
 			set => _busyCounter = Mathf.Clamp(value, 0, 100);
 		}
 
-		public bool Busy => BusyCounter > 0;
-
-		/// <inheritdoc />
-		public bool Draw(MagicLeapSetupDataScriptableObject data)
+		private int _currentImportSdkStep;
+		//TODO: FIX
+		public int CurrentImportSdkStep
 		{
-			if (!data.HasCompatibleMagicLeapSdk)
+			get => _currentImportSdkStep;
+			set
 			{
-				if (CustomGuiContent.CustomButtons.DrawConditionButton(IMPORT_MAGIC_LEAP_SDK, data.HasCompatibleMagicLeapSdk, "....", "Incompatible", Styles.FixButtonStyle, conditionMissingColor: Color.red))
+				if (_currentImportSdkStep != value)
 				{
-					Execute(data);
+					_currentImportSdkStep = Mathf.Clamp(value, 0, 2);
+
+				}
+			}
+		}
+		public bool Busy => BusyCounter > 0;
+		
+		/// <inheritdoc />
+		public void Refresh()
+		{
+			HasIncompatibleSDKAssetPackage = MagicLeapLuminPackageUtility.HasIncompatibleUnityAssetPackage();
+			HasCompatibleMagicLeapSdk = MagicLeapLuminPackageUtility.HasCompatibleMagicLeapSdk();
+			HasMagicLeapSdkInstalled = (object)CachedMagicLeapMLInputType != null;
+			GetSdkFromPackageManager = MagicLeapLuminPackageUtility.UseSdkFromPackageManager();
+		}
+
+		/// <summary>
+		///     Updates the variables based on if the the Magic Leap SDK are installed
+		/// </summary>
+		public static void CheckForMagicLeapSdkPackage()
+		{
+			if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin)
+			{
+				BusyCounter++;
+				PackageUtility.HasPackageInstalled(MAGIC_LEAP_PACKAGE_ID, OnCheckForMagicLeapPackageInPackageManager);
+
+
+
+				void OnCheckForMagicLeapPackageInPackageManager(bool success, bool hasPackage)
+				{
+					//RefreshVariables();
+					BusyCounter--;
+					HasMagicLeapSdkInPackageManager = hasPackage;
+				}
+			}
+		}
+		/// <inheritdoc />
+		public bool Draw()
+		{
+			if (!HasCompatibleMagicLeapSdk)
+			{
+				if (CustomGuiContent.CustomButtons.DrawConditionButton(IMPORT_MAGIC_LEAP_SDK, HasCompatibleMagicLeapSdk, "....", "Incompatible", Styles.FixButtonStyle, conditionMissingColor: Color.red))
+				{
+					Execute();
 					return true;
 				}
 
 				return false;
 			}
 
-			if (data.CurrentImportSdkStep == 1 && !data.Loading && !data.Busy && !Busy)
+			if (CurrentImportSdkStep == 1 && !Busy)
 			{
-				EmbedPackage(data);
+				EmbedPackage();
 			}
 
-			if (CustomGuiContent.CustomButtons.DrawConditionButton(IMPORT_MAGIC_LEAP_SDK, data.HasMagicLeapSdkInstalled, CONDITION_MET_LABEL, IMPORT_MAGIC_LEAP_SDK_BUTTON, Styles.FixButtonStyle))
+			if (CustomGuiContent.CustomButtons.DrawConditionButton(IMPORT_MAGIC_LEAP_SDK, HasMagicLeapSdkInstalled, CONDITION_MET_LABEL, IMPORT_MAGIC_LEAP_SDK_BUTTON, Styles.FixButtonStyle))
 			{
-				Execute(data);
+				Execute();
 				return true;
 			}
 
@@ -76,21 +132,17 @@ namespace MagicLeapSetupTool.Editor.Setup
 		}
 
 		/// <inheritdoc />
-		public void Execute(MagicLeapSetupDataScriptableObject data)
+		public void Execute()
 		{
-			if (!data.HasCompatibleMagicLeapSdk)
+			if (!HasCompatibleMagicLeapSdk)
 			{
-				UpgradePrompt(data);
+				UpgradePrompt();
 			}
 			else
 			{
-				if (data.GetSdkFromPackageManager)
+				if (GetSdkFromPackageManager)
 				{
-					ImportSdkFromUnityPackageManager(data);
-				}
-				else
-				{
-					ImportSdkFromUnityAssetPackage(data);
+					ImportSdkFromUnityPackageManager();
 				}
 			}
 		}
@@ -99,10 +151,16 @@ namespace MagicLeapSetupTool.Editor.Setup
 		///     Embeds Magic Leap SDK package into the Packages folder
 		/// </summary>
 		/// <param name="data"></param>
-		private void EmbedPackage(MagicLeapSetupDataScriptableObject data)
+		private void EmbedPackage()
 		{
-			PackageUtility.EmbedPackage(MAGIC_LEAP_PACKAGE_ID, OnAddMagicLeapPackageRequestFinished);
-			BusyCounter++;
+
+			var embedPackage = EditorUtility.DisplayDialog(EMBED_PACKAGE_OPTION_TITLE, EMBED_PACKAGE_OPTION_BODY,
+																				EMBED_PACKAGE_OPTION_OK, EMBED_PACKAGE_OPTION_CANCEL);
+			if (embedPackage)
+			{
+				PackageUtility.EmbedPackage(MAGIC_LEAP_PACKAGE_ID, OnAddMagicLeapPackageRequestFinished);
+				BusyCounter++;
+			}
 
 
 
@@ -110,9 +168,9 @@ namespace MagicLeapSetupTool.Editor.Setup
 			{
 				if (success)
 				{
-					//data.RefreshVariables();
-					data.CheckSDKAvailability();
-					data.CurrentImportSdkStep = 2;
+					MagicLeapLuminPackageUtility.UpdateDefineSymbols();
+					HasMagicLeapSdkInPackageManager = success;
+					CurrentImportSdkStep = 2;
 				}
 				else
 				{
@@ -129,7 +187,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 		///     mismatch
 		/// </summary>
 		/// <param name="data"></param>
-		private void UpgradePrompt(MagicLeapSetupDataScriptableObject data)
+		private void UpgradePrompt()
 		{
 			var usePreviousCertificateOption =
 				EditorUtility.DisplayDialogComplex(REMOVE_INCOMPATIBLE_MAGIC_LEAP_SDK_TITLE,
@@ -141,9 +199,9 @@ namespace MagicLeapSetupTool.Editor.Setup
 			switch (usePreviousCertificateOption)
 			{
 				case 0: //Remove
-					if (data.HasIncompatibleSDKAssetPackage)
+					if (HasIncompatibleSDKAssetPackage)
 					{
-						data.IsRestarting = true;
+						//data.IsRestarting = true;
 						UnityProjectSettingsUtility.DeleteFolder(Path.Combine(Application.dataPath, "MagicLeap"), null,
 																MagicLeapSetupWindow._setupWindow,
 																$"{Application.dataPath}-DeletedFoldersReset");
@@ -158,93 +216,17 @@ namespace MagicLeapSetupTool.Editor.Setup
 				case 1: //Cancel
 					break;
 				case 2: //Remove and update
-					if (data.HasIncompatibleSDKAssetPackage)
+					if (HasIncompatibleSDKAssetPackage)
 					{
 						EditorPrefs.SetBool($"{Application.dataPath}-Install", true);
 						UnityProjectSettingsUtility.DeleteFolder(Path.Combine(Application.dataPath, "MagicLeap"),
-																() => { ImportSdkFromUnityPackageManager(data); },
+																() => { ImportSdkFromUnityPackageManager(); },
 																MagicLeapSetupWindow._setupWindow,
 																$"{Application.dataPath}-DeletedFoldersReset");
 					}
-					else
-					{
-						BusyCounter++;
-						MagicLeapLuminPackageUtility.RemoveMagicLeapPackageManagerSDK(() =>
-																					{
-																						ImportSdkFromUnityAssetPackage(data);
-																						BusyCounter--;
-																					});
-					}
+					
 
 					break;
-			}
-		}
-
-		/// <summary>
-		///     Removes the Magic Leap SDK from the Package Manager if it is installed. Called before importing Sdk From Asset
-		///     Package <see cref="ImportSdkFromUnityAssetPackage" />
-		/// </summary>
-		/// <param name="data"></param>
-		private static void RemoveMagicLeapSdkFromPackageManager(MagicLeapSetupDataScriptableObject data)
-		{
-			
-				MagicLeapLuminPackageUtility.RemoveMagicLeapPackageManagerSDK(() =>
-																			{
-																				BusyCounter++;
-																				var unityPackagePath = MagicLeapLuminPackageUtility.GetUnityPackagePath;
-																				if (File.Exists(unityPackagePath))
-																				{
-																					// "importing [{0}]"
-																					Debug.Log(string.Format(IMPORTING_PACKAGE_TEXT, Path.GetFullPath(unityPackagePath)));
-
-																					AssetDatabase.ImportPackage(Path.GetFullPath(unityPackagePath), true);
-																				}
-																				else
-																				{
-																					// "Could not find Unity Package at path [{0}].\n SDK Path: [{1}]\nSDK Version: [{2}]"
-																					Debug.LogError(string.Format(CANNOT_FIND_PACKAGE_TEXT, Path.GetFullPath(unityPackagePath), MagicLeapLuminPackageUtility.GetSDKPath(), MagicLeapLuminPackageUtility.GetSdkVersion()));
-																				}
-																			});
-			
-		}
-
-		/// <summary>
-		///     Imports the Unity Asset Package (used for SDK version less than 0.26.0)
-		/// </summary>
-		/// <param name="data"></param>
-		internal void ImportSdkFromUnityAssetPackage(MagicLeapSetupDataScriptableObject data)
-		{
-			RemoveMagicLeapSdkFromPackageManager(data);
-			AssetDatabase.importPackageFailed += OnFailedToImport;
-			AssetDatabase.importPackageCancelled += AssetDatabase_importPackageCancelled;
-
-
-
-			void OnFailedToImport(string packageName, string errorMessage)
-			{
-				Debug.LogError(errorMessage);
-				var failedToImportOptions = EditorUtility.DisplayDialogComplex(FAILED_TO_IMPORT_TITLE, FAILED_TO_IMPORT_MESSAGE,
-																				FAILED_TO_IMPORT_OK, FAILED_TO_IMPORT_CANCEL, FAILED_TO_IMPORT_ALT);
-
-				switch (failedToImportOptions)
-				{
-					case 0: //Try again
-						ImportSdkFromUnityAssetPackage(data);
-						break;
-					case 1: //Stop
-						MagicLeapSetupAutoRun.Stop();
-						break;
-					case 2: //Go to documentation
-						Help.BrowseURL(SETUP_ENVIRONMENT_URL);
-						break;
-				}
-			}
-
-
-
-			void AssetDatabase_importPackageCancelled(string packageName)
-			{
-				MagicLeapSetupAutoRun.Stop();
 			}
 		}
 
@@ -253,12 +235,12 @@ namespace MagicLeapSetupTool.Editor.Setup
 		///     Imports Magic Leap SDK through the package manager
 		/// </summary>
 		/// <param name="data"></param>
-		internal void ImportSdkFromUnityPackageManager(MagicLeapSetupDataScriptableObject data)
+		internal void ImportSdkFromUnityPackageManager()
 		{
 			EditorPrefs.SetBool($"{Application.dataPath}-Install", false);
 
 			// _busyCounter++;
-			AddMagicLeapSdkFromPackageManagerAndRefresh(data);
+			AddMagicLeapSdkFromPackageManagerAndRefresh();
 		}
 
 
@@ -266,7 +248,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 		///     Adds the Magic Leap SDK and refreshes setup variables
 		/// </summary>
 		/// <param name="data"></param>
-		private void AddMagicLeapSdkFromPackageManagerAndRefresh(MagicLeapSetupDataScriptableObject data)
+		private void AddMagicLeapSdkFromPackageManagerAndRefresh()
 		{
 			BusyCounter++;
 			var versionLabel = MagicLeapLuminPackageUtility.GetSdkVersion();
@@ -291,7 +273,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 						{
 							if (success)
 							{
-								EmbedPackage(data);
+								EmbedPackage();
 							}
 						}
 					}
@@ -304,5 +286,6 @@ namespace MagicLeapSetupTool.Editor.Setup
 				Debug.LogError(string.Format(WRONG_VERSION_FORMAT_ERROR, versionLabel));
 			}
 		}
+
 	}
 }

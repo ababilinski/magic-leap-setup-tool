@@ -1,5 +1,6 @@
 ﻿using MagicLeapSetupTool.Editor.Interfaces;
 using MagicLeapSetupTool.Editor.ScriptableObjects;
+using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,33 +14,42 @@ namespace MagicLeapSetupTool.Editor.Setup
 		private const string FIX_SETTING_BUTTON_LABEL = "Fix Setting";
 		private const string CONDITION_MET_LABEL = "Done";
 		private const string BUILD_SETTING_LABEL = "Set build target to Lumin";
-
+		public static bool CorrectBuildTarget;
+		private bool _hasRootSDKPath;
 		/// <inheritdoc />
-		public bool Draw(MagicLeapSetupDataScriptableObject data)
+		public void Refresh()
 		{
-			GUI.enabled = data.HasRootSDKPath && !data.Loading;
+			CorrectBuildTarget = EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin;
+			_hasRootSDKPath = MagicLeapLuminPackageUtility.HasRootSDKPath;
+		}
+		
+		
+		/// <inheritdoc />
+		public bool Draw()
+		{
+			GUI.enabled = _hasRootSDKPath;
 
-			data.CorrectBuildTarget = EditorUserBuildSettings.activeBuildTarget == BuildTarget.Lumin;
-			if (CustomGuiContent.CustomButtons.DrawConditionButton(BUILD_SETTING_LABEL, data.CorrectBuildTarget, CONDITION_MET_LABEL,
+
+			if (CustomGuiContent.CustomButtons.DrawConditionButton(BUILD_SETTING_LABEL, CorrectBuildTarget, CONDITION_MET_LABEL,
 																	FIX_SETTING_BUTTON_LABEL, Styles.FixButtonStyle))
 			{
-				Execute(data);
+				Execute();
 				return true;
 			}
 
 			return false;
 		}
-
+		
 		/// <inheritdoc />
-		public void Execute(MagicLeapSetupDataScriptableObject data)
+		public void Execute()
 		{
-			if (data.CorrectBuildTarget)
+			if (BuildTargetSetupStep.CorrectBuildTarget)
 			{
 				return;
 			}
 
 			EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Lumin, BuildTarget.Lumin);
-			data.CorrectBuildTarget = true;
+	
 		}
 	}
 }
