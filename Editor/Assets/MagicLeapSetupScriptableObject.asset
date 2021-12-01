@@ -12,17 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29a27b0c50be4f7eb1a23cb4cb92e26e, type: 3}
   m_Name: MagicLeapSetupScriptableObject
   m_EditorClassIdentifier: 
-  Loading: 0
   IsRestarting: 0
-  CheckingAvailability: 0
-  HasCompatibleMagicLeapSdk: 1
-  HasMagicLeapSdkInstalled: 1
-  HasCorrectGraphicConfiguration: 0
-  LuminSettingEnabled: 0
-  GetSdkFromPackageManager: 1
-  ValidCertificatePath: 0
-  ImportMagicLeapPackageFromPackageManager: 1
-  HasIncompatibleSDKAssetPackage: 0
-  SdkApiLevel: 10
-  CorrectColorSpace: 0
   EmbeddedPackage: 0

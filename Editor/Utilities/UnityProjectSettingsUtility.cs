@@ -49,8 +49,8 @@ namespace MagicLeapSetupTool.Editor.Utilities
 
 		private static readonly Dictionary<BuildTarget, bool> _supportedPlatformByBuildTarget = new Dictionary<BuildTarget, bool>(); //memo to avoid requesting the same value multiple times
 		public static readonly Type CachedEditorApplicationType = Type.GetType("UnityEditor.EditorApplication,UnityEditor.dll");
-		public static readonly Type CachedPlayerSettingsLuminType = Type.GetType("UnityEditor.PlayerSettings+Lumin");
-		public static readonly PropertyInfo CachedEditorLuminAPILevelProperty = CachedEditorApplicationType.GetProperty("certificatePath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+		public static readonly Type CachedPlayerSettingsLuminType = Type.GetType("UnityEditor.PlayerSettings+Lumin,UnityEditor.CoreModule");
+		public static readonly PropertyInfo CachedEditorLuminAPILevelProperty = CachedPlayerSettingsLuminType.GetProperty("certificatePath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 		public static readonly MethodInfo CachedEditorRequestCloseAndRelaunchMethodInfo = CachedEditorApplicationType.GetMethod("RequestCloseAndRelaunchWithCurrentArguments", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 		static UnityProjectSettingsUtility()
 		{

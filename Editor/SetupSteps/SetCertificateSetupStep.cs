@@ -45,7 +45,10 @@ namespace MagicLeapSetupTool.Editor.Setup
 				if (_hasLuminInstalled && (string.IsNullOrEmpty(_certificatePath) || !File.Exists(_certificatePath)))
 				{
 					_certificatePath = UnityProjectSettingsUtility.Lumin.GetInternalCertificatePath();
-					EditorPrefs.SetString(CERTIFICATE_PATH_KEY, _certificatePath);
+					if ((!string.IsNullOrEmpty(_certificatePath) && File.Exists(_certificatePath)))
+					{
+						EditorPrefs.SetString(CERTIFICATE_PATH_KEY, _certificatePath);
+					}
 				}
 
 				ValidCertificatePath = _hasLuminInstalled && !string.IsNullOrEmpty(_certificatePath) && File.Exists(_certificatePath);
@@ -53,7 +56,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 			}
 			set
 			{
-				if (!string.IsNullOrEmpty(value))
+				if (!string.IsNullOrEmpty(value) && File.Exists(value))
 				{
 					EditorPrefs.SetString(CERTIFICATE_PATH_KEY, value);
 				}
@@ -69,6 +72,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 			CertificatePath = UnityProjectSettingsUtility.Lumin.GetInternalCertificatePath();
 			ValidCertificatePath = !string.IsNullOrEmpty(CertificatePath) && File.Exists(CertificatePath);
 			PreviousCertificatePath = MagicLeapLuminPackageUtility.PreviousCertificatePath;
+
 
 		}
 		/// <inheritdoc />
@@ -109,8 +113,8 @@ namespace MagicLeapSetupTool.Editor.Setup
 			switch (usePreviousCertificateOption)
 			{
 				case 0: //Yes
-					SetCertificateSetupStep.CertificatePath = PreviousCertificatePath;
-					AssetDatabase.SaveAssets();
+					CertificatePath = PreviousCertificatePath;
+				
 					showAgain?.Invoke(true);
 					break;
 				case 1: //Cancel
