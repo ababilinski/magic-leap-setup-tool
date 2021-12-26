@@ -161,7 +161,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 				PackageUtility.EmbedPackage(MAGIC_LEAP_PACKAGE_ID, OnAddMagicLeapPackageRequestFinished);
 				BusyCounter++;
 			}
-
+			
 
 
 			void OnAddMagicLeapPackageRequestFinished(bool success)
