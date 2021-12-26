@@ -77,6 +77,7 @@ namespace MagicLeapSetupTool.Editor.Utilities
 		}
 #endif
 		public static readonly Type InternalSDKUtilityType = Type.GetType("UnityEditor.XR.MagicLeap.SDKUtility,UnityEditor.XR.MagicLeap");
+		
 		private static readonly PropertyInfo _sdkPathProperty = InternalSDKUtilityType.GetProperty("sdkPath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 		private static readonly PropertyInfo _sdkVersionProperty = InternalSDKUtilityType.GetProperty("sdkVersion", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 		private static readonly PropertyInfo _sdkAPILevelProperty = InternalSDKUtilityType.GetProperty("sdkAPILevel", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);

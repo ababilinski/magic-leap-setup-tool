@@ -33,6 +33,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 		/// <inheritdoc />
 		public void Refresh()
 		{
+		
 			_hasRootSDKPath = MagicLeapLuminPackageUtility.HasRootSDKPath;
 			_sdkRoot = MagicLeapLuminPackageUtility.SdkRoot;
 		}

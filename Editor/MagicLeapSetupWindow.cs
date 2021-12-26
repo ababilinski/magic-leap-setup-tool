@@ -209,7 +209,7 @@ namespace MagicLeapSetupTool.Editor
         }
 
 
-        private void RefreshSteps()
+        private static void RefreshSteps()
         {
             _setSdkFolderSetupStep.Refresh();
             _buildTargetSetupStep.Refresh();
@@ -258,9 +258,10 @@ namespace MagicLeapSetupTool.Editor
 
         internal static void FullRefresh()
         {
-
             ImportMagicLeapSdkSetupStep.CheckForMagicLeapSdkPackage();
             SetupData.UpdateDefineSymbols();
+            RefreshSteps();
+
         }
 
 
