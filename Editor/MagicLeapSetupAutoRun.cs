@@ -4,11 +4,7 @@
 */
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
-using MagicLeapSetupTool.Editor.ScriptableObjects;
 using MagicLeapSetupTool.Editor.Setup;
-using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
 
@@ -56,10 +52,6 @@ namespace MagicLeapSetupTool.Editor
             get
             {
             
-                if (_magicLeapSetupData == null)
-                {
-                    _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
-                }
                 return UpdateGraphicsApiSetupStep.HasCorrectGraphicConfiguration
                    && PlayerSettings.colorSpace == ColorSpace.Linear
                    && ImportMagicLeapSdkSetupStep.HasMagicLeapSdkInstalled
@@ -72,7 +64,6 @@ namespace MagicLeapSetupTool.Editor
             }
         }
 
-        private static MagicLeapSetupDataScriptableObject _magicLeapSetupData;
         private static SetSdkFolderSetupStep _setSdkFolderSetupStep = new SetSdkFolderSetupStep();
         private static BuildTargetSetupStep _buildTargetSetupStep = new BuildTargetSetupStep();
         private static EnablePluginSetupStep _enablePluginSetupStep = new EnablePluginSetupStep();
@@ -121,7 +112,6 @@ namespace MagicLeapSetupTool.Editor
      
         internal static void RunApplyAll()
         {
-            _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
             if (!_allAutoStepsComplete)
             {
                 var dialogComplex = EditorUtility.DisplayDialogComplex(APPLY_ALL_PROMPT_TITLE, APPLY_ALL_PROMPT_MESSAGE,
@@ -174,12 +164,8 @@ namespace MagicLeapSetupTool.Editor
 
         internal static void Tick()
         {
-            if (_magicLeapSetupData == null)
-            {
-                _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
-                return;
-            }
-            var _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || _magicLeapSetupData.Busy || EditorApplication.isUpdating;
+           
+            var _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling  || EditorApplication.isUpdating;
             if (CurrentApplyAllState != ApplyAllState.Done && !_loading)
             {
                 ApplyAll();

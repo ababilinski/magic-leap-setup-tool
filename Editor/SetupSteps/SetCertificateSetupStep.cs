@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using MagicLeapSetupTool.Editor.Interfaces;
-using MagicLeapSetupTool.Editor.ScriptableObjects;
 using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;

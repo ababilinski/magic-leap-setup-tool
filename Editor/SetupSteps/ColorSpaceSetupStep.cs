@@ -1,5 +1,4 @@
 ﻿using MagicLeapSetupTool.Editor.Interfaces;
-using MagicLeapSetupTool.Editor.ScriptableObjects;
 using UnityEditor;
 using UnityEngine;
 

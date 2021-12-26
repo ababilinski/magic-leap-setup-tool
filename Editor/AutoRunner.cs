@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using MagicLeapSetupTool.Editor.ScriptableObjects;
 using MagicLeapSetupTool.Editor.Setup;
 using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
@@ -20,18 +19,18 @@ namespace MagicLeapSetupTool.Editor
 		static AutoRunner()
 		{
 			EditorApplication.update += OnEditorApplicationUpdate;
-			
+			EditorApplication.quitting += OnQuit;
+		}
+
+		private static void OnQuit()
+		{
+			EditorApplication.quitting -= OnQuit;
+			EditorPrefs.SetBool(EditorKeyUtility.WindowClosedEditorPrefKey, false);
 		}
 		
 
 		private static void OnEditorApplicationUpdate()
 		{
-			var data = MagicLeapSetupDataScriptableObject.Instance;
-			if (!data)
-			{
-				return;
-			}
-
 
 			SetupData.UpdateDefineSymbols();
 

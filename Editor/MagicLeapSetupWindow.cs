@@ -6,7 +6,6 @@
 
 using System.IO;
 using MagicLeapSetupTool.Editor.Interfaces;
-using MagicLeapSetupTool.Editor.ScriptableObjects;
 using MagicLeapSetupTool.Editor.Setup;
 using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
@@ -59,7 +58,6 @@ namespace MagicLeapSetupTool.Editor
 
         private static bool _loading;
         private static bool _showPreviousCertificatePrompt;
-        private static MagicLeapSetupDataScriptableObject _magicLeapSetupData;
 
         private static readonly SetSdkFolderSetupStep _setSdkFolderSetupStep = new SetSdkFolderSetupStep();
         private static readonly BuildTargetSetupStep _buildTargetSetupStep = new BuildTargetSetupStep();
@@ -76,8 +74,6 @@ namespace MagicLeapSetupTool.Editor
 
         private void Awake()
         {
-            MagicLeapSetupDataScriptableObject.BusyCounter = 0;
-            _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
             EditorApplication.UnlockReloadAssemblies();
             _showPreviousCertificatePrompt = true;
         }
@@ -91,11 +87,9 @@ namespace MagicLeapSetupTool.Editor
             if (EditorPrefs.GetBool($"{Application.dataPath}-DeletedFoldersReset", false) && EditorPrefs.GetBool($"{Application.dataPath}-Install", false))
             {
 
-                _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
                 _importMagicLeapSdkSetupStep.ImportSdkFromUnityPackageManager();
                 EditorPrefs.SetBool($"{Application.dataPath}-DeletedFoldersReset", false);
                 EditorPrefs.SetBool($"{Application.dataPath}-Install", false);
-                _magicLeapSetupData.IsRestarting = false;
             }
         }
 
@@ -109,8 +103,6 @@ namespace MagicLeapSetupTool.Editor
         private void OnDestroy()
         {
             EditorPrefs.SetBool(EditorKeyUtility.WindowClosedEditorPrefKey, true);
-
-            EditorApplication.quitting -= OnQuit;
    
             FullRefresh();
             MagicLeapSetupAutoRun.Stop();
@@ -120,12 +112,12 @@ namespace MagicLeapSetupTool.Editor
         {
            
             DrawHeader();
-            _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || _magicLeapSetupData.Busy || EditorApplication.isUpdating;
-            if (!_magicLeapSetupData.Busy && !_loading)
-            {
-               
-                _magicLeapSetupData.RefreshVariables();
-            }
+            _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || EditorApplication.isUpdating;
+            // if (!_magicLeapSetupData.Busy && !_loading)
+            // {
+            //    
+            //     _magicLeapSetupData.RefreshVariables();
+            // }
             
             /*if (_magicLeapSetupData.Loading)
             {*/
@@ -193,16 +185,7 @@ namespace MagicLeapSetupTool.Editor
         private void OnFocus()
         {
             RefreshSteps();
-            var temp = new SetupData();
-                _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
-           
-                if(!_magicLeapSetupData.Busy)
-                {
-                
-                    _magicLeapSetupData.RefreshVariables();
-                }
-
-                ImportMagicLeapSdkSetupStep.CheckForMagicLeapSdkPackage();
+            ImportMagicLeapSdkSetupStep.CheckForMagicLeapSdkPackage();
                
         }
 
@@ -241,24 +224,11 @@ namespace MagicLeapSetupTool.Editor
         private static void Open()
         {
         
-            EditorApplication.quitting += OnQuit;
-       
-          
-
-            _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
-       
-            if (_magicLeapSetupData == null)
-            {
-                return;
-            }
-
-           
             EditorApplication.projectChanged += SetupData.UpdateDefineSymbols;
             MagicLeapSetupAutoRun.CheckLastAutoSetupState();
             _showPreviousCertificatePrompt = EditorPrefs.GetBool(EditorKeyUtility.PreviousCertificatePrompt, true);
 
 
-            var temp = new SetupData();
                 _setupWindow = GetWindow<MagicLeapSetupWindow>(false, WINDOW_TITLE_LABEL);
                 _setupWindow.minSize = new Vector2(350, 520);
                 _setupWindow.maxSize = new Vector2(350, 580);
@@ -283,25 +253,14 @@ namespace MagicLeapSetupTool.Editor
             Open();
         }
 
-        private static void OnQuit()
-        {
-            EditorPrefs.SetBool(EditorKeyUtility.WindowClosedEditorPrefKey, false);
-        }
-
+ 
       
 
         internal static void FullRefresh()
         {
-        
-            _magicLeapSetupData = MagicLeapSetupDataScriptableObject.Instance;
-            if (/*!_magicLeapSetupData.Loading &&*/ !_magicLeapSetupData.Busy)
-            {
-                ImportMagicLeapSdkSetupStep.CheckForMagicLeapSdkPackage();
-                SetupData.UpdateDefineSymbols();
-                _magicLeapSetupData.RefreshVariables();
-            }
-            
-          
+
+            ImportMagicLeapSdkSetupStep.CheckForMagicLeapSdkPackage();
+            SetupData.UpdateDefineSymbols();
         }
 
 

@@ -1,5 +1,4 @@
-﻿using MagicLeapSetupTool.Editor.ScriptableObjects;
-
+﻿
 namespace MagicLeapSetupTool.Editor.Interfaces
 {
 	/// <summary>
