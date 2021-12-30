@@ -77,12 +77,13 @@ namespace MagicLeapSetupTool.Editor.Utilities
 		}
 #endif
 		public static readonly Type InternalSDKUtilityType = Type.GetType("UnityEditor.XR.MagicLeap.SDKUtility,UnityEditor.XR.MagicLeap");
-		
+
+#if MAGICLEAP		
 		private static readonly PropertyInfo _sdkPathProperty = InternalSDKUtilityType.GetProperty("sdkPath", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 		private static readonly PropertyInfo _sdkVersionProperty = InternalSDKUtilityType.GetProperty("sdkVersion", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 		private static readonly PropertyInfo _sdkAPILevelProperty = InternalSDKUtilityType.GetProperty("sdkAPILevel", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 		
-#if MAGICLEAP
+
 		private static readonly Type _cachedXRSettingsManagerType = Type.GetType("UnityEditor.XR.Management.XRSettingsManager,Unity.XR.Management.Editor");
 		private static readonly PropertyInfo _cachedXRSettingsProperty = _cachedXRSettingsManagerType.GetProperty("currentSettings", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 		private static readonly MethodInfo _cachedCreateXRSettingsMethod = _cachedXRSettingsManagerType.GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);

@@ -81,7 +81,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 				{
 					
 					LuminSettingEnabled = MagicLeapLuminPackageUtility.IsLuminXREnabled();
-					if (LuminSettingEnabled)
+					if (!LuminSettingEnabled)
 					{
 						Debug.LogWarning(string.Format(ENABLE_LUMIN_FINISHED_UNSUCCESSFULLY_WARNING,
 														"Enable Lumin XR action"));

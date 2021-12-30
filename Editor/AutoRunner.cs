@@ -31,13 +31,16 @@ namespace MagicLeapSetupTool.Editor
 
 		private static void OnEditorApplicationUpdate()
 		{
-
+	
 			SetupData.UpdateDefineSymbols();
-
+			if (AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || EditorApplication.isUpdating)
+			{
+				return;
+			}
 			var autoShow = EditorPrefs.GetBool(EditorKeyUtility.AutoShowEditorPrefKey, true);
 			if (!SetupData.HasRootSDKPathInEditorPrefs
 			 || !_hasLuminInstalled
-			 || BuildTargetSetupStep.CorrectBuildTarget
+			 || !BuildTargetSetupStep.CorrectBuildTarget
 			 || !ImportMagicLeapSdkSetupStep.HasCompatibleMagicLeapSdk)
 			{
 				autoShow = true;

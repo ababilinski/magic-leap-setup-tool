@@ -103,7 +103,7 @@ namespace MagicLeapSetupTool.Editor
         private void OnDestroy()
         {
             EditorPrefs.SetBool(EditorKeyUtility.WindowClosedEditorPrefKey, true);
-   
+            EditorApplication.projectChanged -= FullRefresh;
             FullRefresh();
             MagicLeapSetupAutoRun.Stop();
         }
@@ -119,12 +119,13 @@ namespace MagicLeapSetupTool.Editor
             //     _magicLeapSetupData.RefreshVariables();
             // }
             
-            /*if (_magicLeapSetupData.Loading)
-            {*/
-                //DrawWaitingInfo();
-            /*}
-            else
-            {*/
+            if (_loading || _enablePluginSetupStep.Busy || _importMagicLeapSdkSetupStep.Busy || _updateManifestSetupStep.Busy || _updateGraphicsApiSetupStep.Busy)
+            {
+                DrawWaitingInfo();
+                return;
+            }
+            //else
+            //{*/
                 DrawInfoBox();
             /*}*/
 
@@ -232,8 +233,9 @@ namespace MagicLeapSetupTool.Editor
                 _setupWindow = GetWindow<MagicLeapSetupWindow>(false, WINDOW_TITLE_LABEL);
                 _setupWindow.minSize = new Vector2(350, 520);
                 _setupWindow.maxSize = new Vector2(350, 580);
+                _setupWindow.Show();
                 EditorApplication.projectChanged += FullRefresh;
-           
+                EditorApplication.quitting += () => { EditorPrefs.SetBool(EditorKeyUtility.WindowClosedEditorPrefKey, false); };
 
         }
 
@@ -260,7 +262,7 @@ namespace MagicLeapSetupTool.Editor
         {
             ImportMagicLeapSdkSetupStep.CheckForMagicLeapSdkPackage();
             SetupData.UpdateDefineSymbols();
-            RefreshSteps();
+            EditorApplication.delayCall += RefreshSteps;
 
         }
 
