@@ -273,7 +273,7 @@ namespace MagicLeapSetupTool.Editor.Setup
 
             if (Version.TryParse(versionLabel, out var currentVersion))
             {
-                if (currentVersion >= new Version(0, 26, 0))
+                if (currentVersion <= new Version(0, 26, 0))
                 {
                     if (Directory.Exists(Path.Combine(Application.dataPath, ASSET_RELATIVE_PATH_TO_OLD_SDK)))
                     {
