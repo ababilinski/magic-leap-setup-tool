@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿#region
+
+using System.Collections.Generic;
+
+#endregion
 
 namespace MagicLeapSetupTool.Editor.Templates
 {
@@ -9,24 +13,24 @@ namespace MagicLeapSetupTool.Editor.Templates
     public static class DefaultPackageTemplate
     {
         public static readonly List<string> DEFAULT_PRIVILEGES = new List<string>()
-                                                                 {
-                                                                     "ControllerPose",
-                                                                     "GesturesConfig",
-                                                                     "GesturesSubscribe",
-                                                                     "HandMesh",
-                                                                     "ImuCapture",
-                                                                     "Internet",
-                                                                     "PcfRead",
-                                                                     "WifiStatusRead",
-                                                                     "WorldReconstruction",
-                                                                     "AddressBookRead",
-                                                                     "AddressBookWrite",
-                                                                     "LocalAreaNetwork",
-                                                                     "ObjectData",
-                                                                     "AudioCaptureMic",
-                                                                     "CameraCapture",
-                                                                     "ComputerVision",
-                                                                     "FineLocation"
-                                                                 };
+        {
+            "ControllerPose",
+            "GesturesConfig",
+            "GesturesSubscribe",
+            "HandMesh",
+            "ImuCapture",
+            "Internet",
+            "PcfRead",
+            "WifiStatusRead",
+            "WorldReconstruction",
+            "AddressBookRead",
+            "AddressBookWrite",
+            "LocalAreaNetwork",
+            "ObjectData",
+            "AudioCaptureMic",
+            "CameraCapture",
+            "ComputerVision",
+            "FineLocation"
+        };
     }
 }

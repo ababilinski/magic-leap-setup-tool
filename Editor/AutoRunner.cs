@@ -1,61 +1,60 @@
-﻿using System.IO;
+﻿#region
+
 using MagicLeapSetupTool.Editor.Setup;
 using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
-using UnityEngine;
+
+#endregion
 
 namespace MagicLeapSetupTool.Editor
 {
-	[InitializeOnLoad]
-	public static class AutoRunner
-	{
-		
-		private static readonly bool _hasLuminInstalled =
-														#if MAGICLEAP
-															true;
-														#else
-															false;
-														#endif
-		static AutoRunner()
-		{
-			EditorApplication.update += OnEditorApplicationUpdate;
-			EditorApplication.quitting += OnQuit;
-		}
+    [InitializeOnLoad]
+    public static class AutoRunner
+    {
+        public static bool HasLuminInstalled
+        {
+            get
+            {
+#if MAGICLEAP
+                return true;
+#else
+                return  false;
+#endif
+            }
+        }
 
-		private static void OnQuit()
-		{
-			EditorApplication.quitting -= OnQuit;
-			EditorPrefs.SetBool(EditorKeyUtility.WindowClosedEditorPrefKey, false);
-		}
-		
+        static AutoRunner()
+        {
+            EditorApplication.update += OnEditorApplicationUpdate;
+            EditorApplication.quitting += OnQuit;
+        }
 
-		private static void OnEditorApplicationUpdate()
-		{
-	
-			SetupData.UpdateDefineSymbols();
-			if (AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || EditorApplication.isUpdating)
-			{
-				return;
-			}
-			var autoShow = EditorPrefs.GetBool(EditorKeyUtility.AutoShowEditorPrefKey, true);
-			if (!SetupData.HasRootSDKPathInEditorPrefs
-			 || !_hasLuminInstalled
-			 || !BuildTargetSetupStep.CorrectBuildTarget
-			 || !ImportMagicLeapSdkSetupStep.HasCompatibleMagicLeapSdk)
-			{
-				autoShow = true;
-				EditorPrefs.SetBool(EditorKeyUtility.AutoShowEditorPrefKey, true);
-			}
+        private static void OnQuit()
+        {
+            EditorApplication.quitting -= OnQuit;
+            EditorPrefs.SetBool(EditorKeyUtility.WindowClosedEditorPrefKey, false);
+        }
 
-			EditorApplication.update -= OnEditorApplicationUpdate;
-			if (!autoShow)
-			{
-				return;
-			}
 
-			MagicLeapSetupWindow.ForceOpen();
-			
-            
-		}
-	}
+        private static void OnEditorApplicationUpdate()
+        {
+            SetupData.UpdateDefineSymbols();
+            if (AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling ||
+                EditorApplication.isUpdating) return;
+            var autoShow = EditorPrefs.GetBool(EditorKeyUtility.AutoShowEditorPrefKey, true);
+            if (!SetupData.HasRootSDKPathInEditorPrefs
+                || !HasLuminInstalled
+                || !BuildTargetSetupStep.CorrectBuildTarget
+                || !ImportMagicLeapSdkSetupStep.HasCompatibleMagicLeapSdk)
+            {
+                autoShow = true;
+                EditorPrefs.SetBool(EditorKeyUtility.AutoShowEditorPrefKey, true);
+            }
+
+            EditorApplication.update -= OnEditorApplicationUpdate;
+            if (!autoShow) return;
+
+            MagicLeapSetupWindow.ForceOpen();
+        }
+    }
 }

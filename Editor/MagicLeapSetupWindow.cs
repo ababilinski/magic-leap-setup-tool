@@ -1,59 +1,22 @@
-/* Copyright (C) 2021 Adrian Babilinski
-* You may use, distribute and modify this code under the
-* terms of the MIT License
-*/
+#region
 
-
-using System.IO;
-using MagicLeapSetupTool.Editor.Interfaces;
 using MagicLeapSetupTool.Editor.Setup;
 using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
 using UnityEngine;
 
+#endregion
+
 namespace MagicLeapSetupTool.Editor
 {
-   
     public class MagicLeapSetupWindow : EditorWindow
     {
-    #region EDITOR PREFS
+        #region EDITOR PREFS
 
         private const string MAGIC_LEAP_DEFINES_SYMBOL = "MAGICLEAP";
 
-    #endregion
+        #endregion
 
-    #region TEXT AND LABELS
-
-        private const string WINDOW_PATH = "Magic Leap/Project Setup Utility";
-        private const string WINDOW_TITLE_LABEL = "Magic Leap Project Setup";
-        private const string TITLE_LABEL = "MAGIC LEAP";
-        private const string SUBTITLE_LABEL = "PROJECT SETUP";
-        private const string HELP_BOX_TEXT = "Required settings For Lumin SDK";
-        private const string LOADING_TEXT = "   Loading and Importing...";
-
-        private const string LINKS_TITLE = "Helpful Links:";
-
-
-        private const string SET_CERTIFICATE_HELP_TEXT = "Get a developer certificate";
-
-
-        private const string FAILED_TO_IMPORT_HELP_TEXT = "Setup the developer environment";
-
-     
-
-        private const string GETTING_STARTED_HELP_TEXT = "Read the getting started guide";
-
-    #endregion
-
-    #region HELP URLS
-
-        internal const string Get_CERTIFICATE_URL = "https://developer.magicleap.com/en-us/learn/guides/developer-certificates";
-        internal const string SETUP_ENVIRONMENT_URL = "https://developer.magicleap.com/en-us/learn/guides/set-up-development-environment#installing-lumin-sdk-packages";
-        internal const string GETTING_STARTED_URL = "https://developer.magicleap.com/en-us/learn/guides/get-started-developing-in-unity";
-
-    #endregion
-
-   
         internal static MagicLeapSetupWindow _setupWindow;
 
         private static bool _loading;
@@ -64,12 +27,14 @@ namespace MagicLeapSetupTool.Editor
         private static readonly EnablePluginSetupStep _enablePluginSetupStep = new EnablePluginSetupStep();
         private static readonly UpdateManifestSetupStep _updateManifestSetupStep = new UpdateManifestSetupStep();
         private static readonly SetCertificateSetupStep _setCertificateSetupStep = new SetCertificateSetupStep();
-        private static readonly ImportMagicLeapSdkSetupStep _importMagicLeapSdkSetupStep = new ImportMagicLeapSdkSetupStep();
+
+        private static readonly ImportMagicLeapSdkSetupStep _importMagicLeapSdkSetupStep =
+            new ImportMagicLeapSdkSetupStep();
+
         private static readonly ColorSpaceSetupStep _colorSpaceSetupStep = new ColorSpaceSetupStep();
-        private static readonly UpdateGraphicsApiSetupStep _updateGraphicsApiSetupStep = new UpdateGraphicsApiSetupStep();
 
-
-
+        private static readonly UpdateGraphicsApiSetupStep _updateGraphicsApiSetupStep =
+            new UpdateGraphicsApiSetupStep();
 
 
         private void Awake()
@@ -84,20 +49,21 @@ namespace MagicLeapSetupTool.Editor
             FullRefresh();
             RefreshSteps();
             EditorPrefs.SetBool(EditorKeyUtility.WindowClosedEditorPrefKey, false);
-            if (EditorPrefs.GetBool($"{Application.dataPath}-DeletedFoldersReset", false) && EditorPrefs.GetBool($"{Application.dataPath}-Install", false))
+            if (EditorPrefs.GetBool($"{Application.dataPath}-DeletedFoldersReset", false) &&
+                EditorPrefs.GetBool($"{Application.dataPath}-Install", false))
             {
-
                 _importMagicLeapSdkSetupStep.ImportSdkFromUnityPackageManager();
                 EditorPrefs.SetBool($"{Application.dataPath}-DeletedFoldersReset", false);
                 EditorPrefs.SetBool($"{Application.dataPath}-Install", false);
             }
         }
 
-
         private void OnDisable()
         {
             EditorPrefs.SetBool(EditorKeyUtility.PreviousCertificatePrompt, true);
-            EditorPrefs.SetBool(EditorKeyUtility.AutoShowEditorPrefKey, !SetCertificateSetupStep.ValidCertificatePath || !MagicLeapSetupAutoRun._allAutoStepsComplete || !ImportMagicLeapSdkSetupStep.HasCompatibleMagicLeapSdk);
+            EditorPrefs.SetBool(EditorKeyUtility.AutoShowEditorPrefKey,
+                !SetCertificateSetupStep.ValidCertificatePath || !MagicLeapSetupAutoRun._allAutoStepsComplete ||
+                !ImportMagicLeapSdkSetupStep.HasCompatibleMagicLeapSdk);
         }
 
         private void OnDestroy()
@@ -107,75 +73,44 @@ namespace MagicLeapSetupTool.Editor
             FullRefresh();
             MagicLeapSetupAutoRun.Stop();
         }
-        
+
         public void OnGUI()
         {
-           
             DrawHeader();
-            _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling || EditorApplication.isUpdating;
-            // if (!_magicLeapSetupData.Busy && !_loading)
-            // {
-            //    
-            //     _magicLeapSetupData.RefreshVariables();
-            // }
-            
-            if (_loading || _enablePluginSetupStep.Busy || _importMagicLeapSdkSetupStep.Busy || _updateManifestSetupStep.Busy || _updateGraphicsApiSetupStep.Busy)
+            _loading = AssetDatabase.IsAssetImportWorkerProcess() || EditorApplication.isCompiling ||
+                       EditorApplication.isUpdating;
+
+            if (_loading || _enablePluginSetupStep.Busy || _importMagicLeapSdkSetupStep.Busy ||
+                _updateManifestSetupStep.Busy || _updateGraphicsApiSetupStep.Busy)
             {
                 DrawWaitingInfo();
                 return;
             }
-            //else
-            //{*/
-                DrawInfoBox();
-            /*}*/
+
+            DrawInfoBox();
 
             GUILayout.BeginVertical(EditorStyles.helpBox);
             {
                 GUILayout.Space(5);
-                if (_setSdkFolderSetupStep.Draw())
-                {
-                    Repaint();
-                }
+                if (_setSdkFolderSetupStep.Draw()) Repaint();
 
-                if (_buildTargetSetupStep.Draw())
-                {
-                    Repaint();
-                }
+                if (_buildTargetSetupStep.Draw()) Repaint();
 
-                if (_importMagicLeapSdkSetupStep.Draw())
-                {
-                    Repaint();
-                }
+                if (_importMagicLeapSdkSetupStep.Draw()) Repaint();
 
-                if (_enablePluginSetupStep.Draw())
-                {
-                    Repaint();
-                }
-                
-                if (_updateManifestSetupStep.Draw())
-                {
-                    Repaint();
-                }
+                if (_enablePluginSetupStep.Draw()) Repaint();
 
-                if (_setCertificateSetupStep.Draw())
-                {
-                    Repaint();
-                }
+                if (_updateManifestSetupStep.Draw()) Repaint();
 
-                if (_colorSpaceSetupStep.Draw())
-                {
-                    Repaint();
-                }
+                if (_setCertificateSetupStep.Draw()) Repaint();
 
-              
-                
-                if (_updateGraphicsApiSetupStep.Draw())
-                {
-                    Repaint();
-                }
+                if (_colorSpaceSetupStep.Draw()) Repaint();
+
+                if (_updateGraphicsApiSetupStep.Draw()) Repaint();
 
                 GUI.backgroundColor = Color.clear;
             }
+
             GUILayout.EndVertical();
             GUILayout.Space(30);
             DrawHelpLinks();
@@ -187,23 +122,21 @@ namespace MagicLeapSetupTool.Editor
         {
             RefreshSteps();
             ImportMagicLeapSdkSetupStep.CheckForMagicLeapSdkPackage();
-               
         }
 
-     
+
         private void OnInspectorUpdate()
         {
-        
-            if (!_loading && EnablePluginSetupStep.LuminSettingEnabled && !SetCertificateSetupStep.ValidCertificatePath && _showPreviousCertificatePrompt && !string.IsNullOrWhiteSpace(SetCertificateSetupStep.PreviousCertificatePath))
+            if (!_loading && EnablePluginSetupStep.LuminSettingEnabled &&
+                !SetCertificateSetupStep.ValidCertificatePath && _showPreviousCertificatePrompt &&
+                !string.IsNullOrWhiteSpace(SetCertificateSetupStep.PreviousCertificatePath))
             {
-               _setCertificateSetupStep.FoundPreviousCertificateLocationPrompt(OnChoseSelected);
+                _setCertificateSetupStep.FoundPreviousCertificateLocationPrompt(OnChoseSelected);
 
-
-
-               void OnChoseSelected(bool showAgain)
-               {
-                   _showPreviousCertificatePrompt = showAgain;
-               }
+                void OnChoseSelected(bool showAgain)
+                {
+                    _showPreviousCertificatePrompt = showAgain;
+                }
             }
 
             Repaint();
@@ -224,27 +157,24 @@ namespace MagicLeapSetupTool.Editor
 
         private static void Open()
         {
-        
             EditorApplication.projectChanged += SetupData.UpdateDefineSymbols;
             MagicLeapSetupAutoRun.CheckLastAutoSetupState();
             _showPreviousCertificatePrompt = EditorPrefs.GetBool(EditorKeyUtility.PreviousCertificatePrompt, true);
 
-
-                _setupWindow = GetWindow<MagicLeapSetupWindow>(false, WINDOW_TITLE_LABEL);
-                _setupWindow.minSize = new Vector2(350, 520);
-                _setupWindow.maxSize = new Vector2(350, 580);
-                _setupWindow.Show();
-                EditorApplication.projectChanged += FullRefresh;
-                EditorApplication.quitting += () => { EditorPrefs.SetBool(EditorKeyUtility.WindowClosedEditorPrefKey, false); };
-
+            _setupWindow = GetWindow<MagicLeapSetupWindow>(false, WINDOW_TITLE_LABEL);
+            _setupWindow.minSize = new Vector2(350, 520);
+            _setupWindow.maxSize = new Vector2(350, 580);
+            _setupWindow.Show();
+            EditorApplication.projectChanged += FullRefresh;
+            EditorApplication.quitting += () =>
+            {
+                EditorPrefs.SetBool(EditorKeyUtility.WindowClosedEditorPrefKey, false);
+            };
         }
 
         public static void ForceOpen()
         {
-            if (EditorPrefs.GetBool(EditorKeyUtility.WindowClosedEditorPrefKey, false))
-            {
-                return;
-            }
+            if (EditorPrefs.GetBool(EditorKeyUtility.WindowClosedEditorPrefKey, false)) return;
             Open();
         }
 
@@ -255,19 +185,49 @@ namespace MagicLeapSetupTool.Editor
             Open();
         }
 
- 
-      
-
         internal static void FullRefresh()
         {
             ImportMagicLeapSdkSetupStep.CheckForMagicLeapSdkPackage();
             SetupData.UpdateDefineSymbols();
             EditorApplication.delayCall += RefreshSteps;
-
         }
 
+        #region TEXT AND LABELS
 
-    #region Draw Window Controls
+        private const string WINDOW_PATH = "Magic Leap/Project Setup Utility";
+        private const string WINDOW_TITLE_LABEL = "Magic Leap Project Setup";
+        private const string TITLE_LABEL = "MAGIC LEAP";
+        private const string SUBTITLE_LABEL = "PROJECT SETUP";
+        private const string HELP_BOX_TEXT = "Required settings For Lumin SDK";
+        private const string LOADING_TEXT = "   Loading and Importing...";
+
+        private const string LINKS_TITLE = "Helpful Links:";
+
+
+        private const string SET_CERTIFICATE_HELP_TEXT = "Get a developer certificate";
+
+
+        private const string FAILED_TO_IMPORT_HELP_TEXT = "Setup the developer environment";
+
+
+        private const string GETTING_STARTED_HELP_TEXT = "Read the getting started guide";
+
+        #endregion
+
+        #region HELP URLS
+
+        internal const string Get_CERTIFICATE_URL =
+            "https://developer.magicleap.com/en-us/learn/guides/developer-certificates";
+
+        internal const string SETUP_ENVIRONMENT_URL =
+            "https://developer.magicleap.com/en-us/learn/guides/set-up-development-environment#installing-lumin-sdk-packages";
+
+        internal const string GETTING_STARTED_URL =
+            "https://developer.magicleap.com/en-us/learn/guides/get-started-developing-in-unity";
+
+        #endregion
+
+        #region Draw Window Controls
 
         private void DrawHeader()
         {
@@ -337,32 +297,18 @@ namespace MagicLeapSetupTool.Editor
             if (MagicLeapSetupAutoRun._allAutoStepsComplete && SetCertificateSetupStep.ValidCertificatePath)
             {
                 GUI.backgroundColor = Color.green;
-                if (GUILayout.Button("Close", GUILayout.MinWidth(20)))
-                {
-                    Close();
-                }
+                if (GUILayout.Button("Close", GUILayout.MinWidth(20))) Close();
             }
             else
             {
                 GUI.backgroundColor = Color.yellow;
-                if (GUILayout.Button("Apply All", GUILayout.MinWidth(20)))
-                {
-                    MagicLeapSetupAutoRun.RunApplyAll();
-                }
+                if (GUILayout.Button("Apply All", GUILayout.MinWidth(20))) MagicLeapSetupAutoRun.RunApplyAll();
             }
 
             GUI.enabled = currentGUIEnabledStatus;
             GUI.backgroundColor = Color.clear;
         }
 
-    #endregion
-
-
-    #region Prompts
-    
-
-
-
-    #endregion
+        #endregion
     }
 }
