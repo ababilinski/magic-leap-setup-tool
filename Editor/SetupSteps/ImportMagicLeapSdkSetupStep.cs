@@ -46,7 +46,7 @@ namespace MagicLeapSetupTool.Editor.Setup
         //0 is method/action name
         private const string FAILED_TO_EXECUTE_ERROR = "Failed to execute [{0}]"; 
 
-        private const string CONFLICT_WHILE_INSTALLING_MAGIC_LEAP_PACKAGE_MANAGER_ASSET = "Cannot install Magic Leap SDK. an old version is currently installed. Please delete: [Assets/MagicLeap/APIs] and try again.";
+        private const string CONFLICT_WHILE_INSTALLING_MAGIC_LEAP_PACKAGE_MANAGER_ASSET = "Cannot install Magic Leap SDK. A conflicting version is currently installed. Please remove it and try again.";
 
         //used to check for  SDK<26
         private const string ASSET_RELATIVE_PATH_TO_OLD_SDK = "MagicLeap/APIs";
@@ -59,6 +59,11 @@ namespace MagicLeapSetupTool.Editor.Setup
 
 
         internal const string SETUP_ENVIRONMENT_URL = "https://developer.magicleap.com/en-us/learn/guides/set-up-development-environment#installing-lumin-sdk-packages";
+
+        private const string REGISTRY_PACKAGE_OPTION_TITLE = "Add Magic Leap Registry";
+        private const string REGISTRY_PACKAGE_OPTION_BODY = "Would you like to install remote version of the Magic Leap SDK via Magic Leap's Registry?";
+        private const string REGISTRY_PACKAGE_OPTION_OK = "Use Magic Leap Registry";
+        private const string REGISTRY_PACKAGE_OPTION_CANCEL = "Use Local Copy";
 
         private const string EMBED_PACKAGE_OPTION_TITLE = "Embed Installed Package?";
 
@@ -190,7 +195,6 @@ namespace MagicLeapSetupTool.Editor.Setup
             {
                 if (success)
                 {
-                    MagicLeapLuminPackageUtility.UpdateDefineSymbols();
                     HasMagicLeapSdkInPackageManager = success;
                     CurrentImportSdkStep = 2;
                 }
@@ -231,7 +235,6 @@ namespace MagicLeapSetupTool.Editor.Setup
                         BusyCounter++;
                         MagicLeapLuminPackageUtility.RemoveMagicLeapPackageManagerSDK(() => { BusyCounter--; });
                     }
-
                     break;
                 case 1: //Cancel
                     break;
@@ -283,14 +286,24 @@ namespace MagicLeapSetupTool.Editor.Setup
                     }
                     else
                     {
-                        PackageUtility.AddPackage(MagicLeapLuminPackageUtility.MagicLeapSdkPackageManagerPath,
-                            OnAddedPackage);
-
+                        var useRegistry = EditorUtility.DisplayDialog(REGISTRY_PACKAGE_OPTION_TITLE, REGISTRY_PACKAGE_OPTION_BODY,
+                            REGISTRY_PACKAGE_OPTION_OK, REGISTRY_PACKAGE_OPTION_CANCEL);
+                        
+                        if (useRegistry)
+                        {
+                            MLSDKRegistryPackageImporter.AddRegistryAndImportMlSdk(OnAddedPackage);
+                        }
+                        else
+                        {
+                            PackageUtility.AddPackage(MagicLeapLuminPackageUtility.MagicLeapSdkPackageManagerPath,
+                                OnAddedPackage);
+                        }
 
                         void OnAddedPackage(bool success)
                         {
                             if (success) EmbedPackage();
                         }
+
                     }
                 }
             }
