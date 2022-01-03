@@ -5,6 +5,7 @@ using System.IO;
 using MagicLeapSetupTool.Editor.Setup;
 using MagicLeapSetupTool.Editor.Utilities;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 #endregion
@@ -15,26 +16,23 @@ namespace MagicLeapSetupTool.Editor
     {
         private const string MAGIC_LEAP_DEFINES_SYMBOL = "MAGICLEAP";
 
-        private const string
-            TEST_FOR_PACKAGE_MANAGER_ML_SCRIPT_UPDATED =
-                "com.magicleap.unitysdk"; // Test this assembly. The name switched after the initial release 
+        // Test this assembly. The name switched after the initial release 
+        private const string TEST_FOR_PACKAGE_MANAGER_ML_SCRIPT_UPDATED = "com.magicleap.unitysdk";
 
-        private const string
-            TEST_FOR_ML_SCRIPT =
-                "UnityEngine.XR.MagicLeap.MLInput"; // Test this assembly. If it does not exist. The package is not imported. 
+        // Test this assembly. If it does not exist. The package is not imported. 
+        private const string TEST_FOR_ML_SCRIPT = "UnityEngine.XR.MagicLeap.MLInput";
 
-        private const string
-            TEST_FOR_PACKAGE_MANAGER_ML_SCRIPT =
-                "com.magicleap.unitysdk"; // Test this assembly. If it does not exist. The package is not imported. 
+        // Test this assembly. If it does not exist. The package is not imported. 
+        private const string TEST_FOR_PACKAGE_MANAGER_ML_SCRIPT = "com.magicleap.unitysdk";
 
-        private const string
-            MAGIC_LEAP_PACKAGE_ID = "com.magicleap.unitysdk"; // Used to check if the build platform is installed
+        // Used to check if the build platform is installed
+        private const string  MAGIC_LEAP_PACKAGE_ID = "com.magicleap.unitysdk";
 
-        private const string
-            LUMIN_PACKAGE_ID = "com.unity.xr.magicleap"; // Used to check if the build platform is installed
+        // Used to check if the build platform is installed
+        private const string LUMIN_PACKAGE_ID = "com.unity.xr.magicleap";
 
-
-        private const string LUMIN_SDK_PATH_KEY = "LuminSDKRoot"; //Editor Pref key to set/get the Lumin SDK
+        //Editor Pref key to set/get the Lumin SDK
+        private const string LUMIN_SDK_PATH_KEY = "LuminSDKRoot";
 
 
         public static readonly string SdkRoot = EditorPrefs.GetString(LUMIN_SDK_PATH_KEY, null);
@@ -99,11 +97,6 @@ namespace MagicLeapSetupTool.Editor
             }
         }
 
-
-        public static void CheckForPackage()
-        {
-        }
-
         /// <summary>
         /// Sets the Lumin SDK path in the Preferences window
         /// </summary>
@@ -137,7 +130,6 @@ namespace MagicLeapSetupTool.Editor
                     CurrentImportSdkStep = 0;
                     PackageUtility.HasPackage("com.magicleap.unitysdk", OnCheckedPackagedList);
 
-
                     void OnCheckedPackagedList(bool exists)
                     {
                         CurrentImportSdkStep = exists ? 1 : 0;
@@ -148,22 +140,6 @@ namespace MagicLeapSetupTool.Editor
             }
         }
 
-
-        /// <summary>
-        /// Updates the variables based on if the the Magic Leap SDK and Lumin SDK are installed
-        /// <see cref="CheckForLuminSdkPackage" /> and <see cref="CheckForMagicLeapSdkPackage" />
-        /// </summary>
-        public void CheckSDKAvailability()
-        {
-            RefreshVariables();
-
-            if (BuildTargetSetupStep.CorrectBuildTarget)
-            {
-                CheckingAvailability = true;
-                CheckForLuminSdkPackage();
-                CheckForMagicLeapSdkPackage();
-            }
-        }
 
         /// <summary>
         /// Updates the variables based on if the the  Lumin SDK are installed
@@ -199,13 +175,40 @@ namespace MagicLeapSetupTool.Editor
             }
         }
 
+        // The method is expected to receive a PackageRegistrationEventArgs event argument to check if the Magic Leap SDK is being installed or uninstalled.
+        public static void RegisteringPackagesEventHandler(PackageRegistrationEventArgs packageRegistrationEventArgs)
+        {
+            foreach (var addedPackage in packageRegistrationEventArgs.added)
+            {
+
+                if (addedPackage.name == LUMIN_PACKAGE_ID)
+                {
+                    if (!DefineSymbolsUtility.ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL))
+                        DefineSymbolsUtility.AddDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
+                }
+
+            }
+
+            foreach (var removedPackage in packageRegistrationEventArgs.removed)
+            {
+
+                if (removedPackage.name == LUMIN_PACKAGE_ID)
+                {
+                    if (DefineSymbolsUtility.ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL))
+                        DefineSymbolsUtility.RemoveDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
+                }
+
+            }
+
+        }
+
         public static void UpdateDefineSymbols()
         {
             EditorApplication.delayCall += () =>
             {
                 if (!DefineSymbolsUtility.DirectoryPathExistsWildCard(
                     Path.GetFullPath(Path.Combine(Application.dataPath, "../Library/PackageCache")),
-                    "com.unity.xr.magicleap"))
+                    LUMIN_PACKAGE_ID))
                 {
                     if (DefineSymbolsUtility.ContainsDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL))
                         DefineSymbolsUtility.RemoveDefineSymbol(MAGIC_LEAP_DEFINES_SYMBOL);
