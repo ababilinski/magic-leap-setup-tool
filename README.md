@@ -28,7 +28,7 @@ Before installing this package, please make sure you set up your developer envir
 > - Copy the git URL from this project [_Package URL_](https://github.com/ababilinski/magic-leap-setup-tool.git)
 > - Inside of your Unity project, navigate to **Window** and then click on **Package Manager**
 > - Select the **+** button and click **Add packages from git URL** 
-> - Past the project URL copied in step one and then click **Add**
+> - Paste the project URL copied in step one and then click **Add**
 
 
 ---
