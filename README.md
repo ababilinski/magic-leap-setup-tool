@@ -1,6 +1,11 @@
 
 <img width="5114" alt="magic-leap-setup-git-banner" src="https://user-images.githubusercontent.com/7719833/124836882-c24b6c80-df51-11eb-9d72-30ef488f4c1c.png">
 
+# This repository has moved
+
+### This tool has been adopted by Magic Leap. Download the latest version from the [**Unity Asset Store**](https://assetstore.unity.com/packages/tools/integration/magic-leap-sdk-for-unity-194780).
+
+---
 # Magic Leap Setup Tool
 A tool to configure your Unity project to build for Magic Leap. It automates the process outlined here: [Magic Leap Getting Started Guide](https://developer.magicleap.com/en-us/learn/guides/get-started-developing-in-unity).
 > *This is not an official Magic Leap tool*
